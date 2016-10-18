@@ -104,7 +104,19 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
-	return NULL;
+      if(priqueue_size(q)<index)//case where the index goes beyond the bounds
+      {
+            return NULL;
+      }
+	else
+      {
+            struct node *temp = q->first;
+            for(int i=0;i<index; i++)//maybe a one off error here?
+            {
+                  temp=temp->next;
+            }
+            return temp;
+      }
 }
 
 
@@ -119,7 +131,29 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-	return 0;
+      if(q->first == NULL)//Handles the empty case
+      {
+            return 0;
+      }
+      struct node *temp = q->first;
+      int numDeleted  = 0;
+      for(int i=0; i<priqueue_size(q);i++)//maybe an off one error here?
+      {
+            //TODO FIX THIS
+      //       if(temp->next->content==NULL)//takes care of the edge case
+      //       {
+      //             if(temp->content==ptr)
+      //             {
+      //                   temp->content==NULL;
+      //
+      //             }
+      //       }
+      //       if(temp->next->content==ptr)
+      //       {
+      //             temp
+      //       }
+      }
+	 return 0;
 }
 
 
@@ -134,6 +168,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
+      //TODO: THIS
 	return 0;
 }
 
@@ -146,7 +181,23 @@ void *priqueue_remove_at(priqueue_t *q, int index)
  */
 int priqueue_size(priqueue_t *q)
 {
-	return 0;
+      int size=0;
+      struct node *temp = q->first;
+      if(q->first==NULL)
+      {
+            free(temp);
+            return size;
+      }
+      else
+      {
+            while(temp->next!=NULL)
+            {
+                  size++;
+                  temp=temp->next;
+            }
+            return size;
+      }
+	//return 0;
 }
 
 
