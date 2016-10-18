@@ -7,9 +7,17 @@
 /**
   Priqueue Data Structure
 */
+
+typedef struct node
+{
+//      int jobid;
+      struct node* next;
+      void *content;
+} node;
+
 typedef struct _priqueue_t
 {
-
+  struct node* first;
 } priqueue_t;
 
 
