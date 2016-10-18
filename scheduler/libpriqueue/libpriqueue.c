@@ -35,7 +35,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
       if(q->first==NULL)
       {
             q->first->content = ptr;
-            return 0;
+            return -1;
       }
       struct node *temp;
       temp = q->first;
@@ -44,7 +44,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
             temp=temp->next;
       }
       temp->content = ptr;
-      return 1;
+      return priqueue_size(q)-1;
 //	return -1;
 }
 
@@ -59,7 +59,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-	return NULL;
+	return q->first;
 }
 
 
@@ -73,7 +73,23 @@ void *priqueue_peek(priqueue_t *q)
  */
 void *priqueue_poll(priqueue_t *q)
 {
-	return NULL;
+      if(q->first == NULL)//Case where queue is empty
+      {
+            return NULL;
+      }
+      else if(priqueue_size(q)==1)//Case where queue is size==1
+      {
+            struct node *temp = q->first;
+            q->first = NULL;//Memory leak? need to free rather than reallocate?
+            return temp->content;
+      }
+      else
+      {
+            struct node *temp = q->first;//save the first node that we'll return later
+            q->first = q->first->next;//makes the front of the queue point at the second node of the queue
+            return temp->content;
+      }
+
 }
 
 
