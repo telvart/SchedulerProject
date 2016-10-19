@@ -11,7 +11,7 @@
 typedef struct node
 {
 //      int jobid;
-      struct node* next;
+      struct node *next;
       void *content;
 } node;
 

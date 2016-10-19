@@ -32,10 +32,18 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-      if(q->first==NULL)
+      if(q->first==NULL)//where q is empty
       {
-            q->first->content = ptr;
-            return -1;
+            struct node temp = {NULL,ptr};
+//            struct node *temp2 = temp;
+//            temp->content=ptr;
+            q->first = &temp;
+            return 0;
+      }
+      if(q->first->next==NULL)//where q is size=1
+      {
+            struct node temp = {NULL,ptr};
+            q->first->next=&temp;
       }
       struct node *temp;
       temp = q->first;
@@ -43,7 +51,8 @@ int priqueue_offer(priqueue_t *q, void *ptr)
       {
             temp=temp->next;
       }
-      temp->content = ptr;
+      struct node temp2 = {NULL,ptr};
+      temp->next = &temp2;
       return priqueue_size(q)-1;
 //	return -1;
 }
