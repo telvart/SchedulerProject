@@ -136,22 +136,21 @@ int priqueue_remove(priqueue_t *q, void *ptr)
             return 0;
       }
       struct node *temp = q->first;
+      struct node *temp2;
       int numDeleted  = 0;
       for(int i=0; i<priqueue_size(q);i++)//maybe an off one error here?
       {
-            //TODO FIX THIS
-      //       if(temp->next->content==NULL)//takes care of the edge case
-      //       {
-      //             if(temp->content==ptr)
-      //             {
-      //                   temp->content==NULL;
-      //
-      //             }
-      //       }
-      //       if(temp->next->content==ptr)
-      //       {
-      //             temp
-      //       }
+            if(temp->content==NULL)
+            {
+                  return numDeleted;
+            }
+            if(temp->content==ptr)
+            {
+                  temp2=temp->next;
+                  free(temp->next);
+                  temp=temp2;
+                  numDeleted++;
+            }
       }
 	 return 0;
 }
@@ -168,8 +167,34 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
-      //TODO: THIS
-	return 0;
+      if(index>priqueue_size(q))//handles the case where index is beyond scope
+      {
+            return NULL;
+      }
+      struct node *temp = q->first;
+      for(int i=1; i<index; i++)//begins at one because temp is set to first
+      {
+            temp=temp->next;
+      }//temp is now looking at the node before the node we want to delete
+      if(temp->next==NULL)//case where there is nothing to remove
+      {
+            //free(temp);
+            return NULL;
+      }
+      if(temp->next->next==NULL)//case where we're removing the last node
+      {
+            struct node *temp2=temp->next;//an actual node to hold return valu
+//            struct node *temp3=*(temp2);//a pointer to look at that node
+            free(temp->next);//free/delete the space
+            return temp2;//return the pointer
+      }//now we are at the general case where there is something after
+      //the node we're deleting
+      struct node *temp2 = temp->next->next;//store the tail in temp2
+      struct node *temp3=temp->next;
+//      struct node *temp4=*(temp3);
+      free(temp->next);//cut of the head
+      temp->next = temp2;//replace the head with the tail
+      return temp3;
 }
 
 
@@ -208,5 +233,26 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-
+      if(q->first==NULL)//handles case where its already empty
+      {
+            return;
+      }
+      if(q->first->next==NULL)//handles the case where size==1
+      {
+            free(q->first);
+            return;
+      }
+      struct node *secondEl;//holds the second element while we delete the first
+//      struct node *temp2=temp->next;
+      for(int i=1;i<priqueue_size(q);i++)
+      {
+            if(q->first->next==NULL)
+            {
+                  free(q->first);
+                  return;
+            }
+            secondEl=q->first->next;
+            free(q->first);
+            q->first=secondEl;
+      }
 }
