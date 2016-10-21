@@ -4,13 +4,15 @@
 #ifndef LIBPRIQUEUE_H_
 #define LIBPRIQUEUE_H_
 
+//will be used to insert into the queue based on priority
+typedef int(*comparer)(const void *, const void *);
+
 /**
   Priqueue Data Structure
 */
 
 typedef struct node
 {
-//      int jobid;
       struct node *next;
       void *content;
 } node;
@@ -18,10 +20,11 @@ typedef struct node
 typedef struct _priqueue_t
 {
   struct node* first;
+  comparer cmp;
 } priqueue_t;
 
 
-void   priqueue_init     (priqueue_t *q, int(*comparer)(const void *, const void *));
+void   priqueue_init     (priqueue_t *q, comparer cmp);
 
 int    priqueue_offer    (priqueue_t *q, void *ptr);
 void * priqueue_peek     (priqueue_t *q);

@@ -17,9 +17,10 @@
   @param comparer a function pointer that compares two elements.
   See also @ref comparer-page
  */
-void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
+void priqueue_init(priqueue_t *q, comparer new_cmp)
 {
-  q->first=NULL;
+  q->first = NULL;
+  //jamie saidwork on this fuction, its missing some stuff, specifically compare function
 }
 
 
@@ -32,6 +33,26 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
+
+
+      /* if (q->first == NULL) */
+      /* { */
+      /*   struct node temp = {NULL, ptr}; */
+      /*   q->first=&temp; */
+      /* } */
+      /* else */
+      /* { */
+      /*   struct node* traverse = q->first; */
+      /*   while (traverse->next != NULL) */
+      /*   { */
+      /*     traverse = traverse->next; */
+      /*   } */
+      /*   struct node temp = {NULL, ptr}; */
+      /*   traverse->next=&temp; */
+
+      /* } */
+      //      return 1;
+
       if(q->first==NULL)//where q is empty
       {
             struct node temp = {NULL,ptr};
@@ -54,7 +75,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
       struct node temp2 = {NULL,ptr};
       temp->next = &temp2;
       return priqueue_size(q)-1;
-//	return -1;
+      //	return -1;
 }
 
 
