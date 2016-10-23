@@ -18,9 +18,8 @@ int compare2(const void * a, const void * b)
 
 int main()
 {
-	printf("Got here3");
+
 	priqueue_t q, q2;
-	printf("Got here2");
 	priqueue_init(&q, compare1);
 	priqueue_init(&q2, compare2);
 
@@ -32,7 +31,6 @@ int main()
 		values[i] = i;
 
 	/* Add 5 values, 3 unique. */
-	printf("Got here1");
 	priqueue_offer(&q, &values[12]);
 	priqueue_offer(&q, &values[13]);
 	priqueue_offer(&q, &values[14]);

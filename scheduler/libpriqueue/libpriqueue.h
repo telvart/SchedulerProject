@@ -14,12 +14,14 @@ typedef int(*comparer)(const void *, const void *);
 typedef struct node
 {
       struct node *next;
-      void *content;
+      void* content;
 } node;
 
 typedef struct _priqueue_t
 {
+  int size;
   struct node* first;
+  struct node* last;
   comparer cmp;
 } priqueue_t;
 
