@@ -14,7 +14,7 @@
     - You may assume this function will only be called once per instance of priqueue_t
     - You may assume this function will be the first function called using an instance of priqueue_t.
   @param q a pointer to an instance of the priqueue_t data structure
-  @param comparer a function pointer that compares two elements.
+  @param new_cmp a function pointer that compares two elements.
   See also @ref comparer-page
  */
 void priqueue_init(priqueue_t *q, comparer new_cmp)
@@ -74,7 +74,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
             q->size++;
             return 0;*/
       }
-      else if(q->first == q->last)
+      else if(q->first == q->last)//where q is size=1
       {
         struct node* temp2 = malloc(sizeof(temp2));
         temp2->next = NULL;
@@ -86,12 +86,36 @@ int priqueue_offer(priqueue_t *q, void *ptr)
       }
       else
       {
+        struct node* traveller = q->first;
         struct node* temp3 =malloc(sizeof(temp3));
         temp3->next = NULL;
         temp3->content =ptr;
-        q->last->next=temp3;
-        q->last = temp3;
-        q->size++;
+
+        struct node* temp4;
+
+        for(int i=0; i<q->size; i++)
+        {
+          if(q->cmp(temp3->content,traveller->content)>=0)//insert case
+          {
+            temp4=traveller->next;
+            traveller->next=temp3;
+            temp3->next=temp4;
+            q->size++;
+            return priqueue_size(q)-1;
+          }
+          if(traveller->next==NULL)//end of line
+          {
+            q->last->next=temp3;
+            q->last = temp3;
+            q->size++;
+            return priqueue_size(q)-1;
+          }
+          traveller=traveller->next;
+        }
+        //q->last->next=temp3;
+        //q->last = temp3;
+        printf("FAILURE TO INSERT");
+        //q->size++;
         return priqueue_size(q)-1;
       }
       // else
@@ -216,6 +240,8 @@ void *priqueue_at(priqueue_t *q, int index)
                   temp=temp->next;
             }
             return temp->content;
+          //void* myvoid;
+          //return myvoid;
       }
 }
 
@@ -235,23 +261,34 @@ int priqueue_remove(priqueue_t *q, void *ptr)
       {
             return 0;
       }
+
       struct node *temp = q->first;
       struct node *temp2;
       int numDeleted  = 0;
       for(int i=0; i<priqueue_size(q);i++)//maybe an off one error here?
       {
-            if(temp->content==NULL)
+            if(temp==NULL)
             {
                   return numDeleted;
             }
-            if(temp->content==ptr)
+            if(temp->next==NULL)
             {
-                  temp2=temp->next;
-                  free(temp->next);
-                  temp=temp2;
-                  q->size--;
-                  numDeleted++;
+              return numDeleted;
             }
+            while(temp->next->content==ptr)
+            {
+              temp->next=temp->next->next;
+              numDeleted++;
+            }
+            temp=temp->next;
+            // if(temp->content==ptr)
+            // {
+            //       temp2=temp->next;
+            //     //  free(temp->next);
+            //       temp->next=temp2;
+            //       q->size--;
+            //       numDeleted++;
+            // }
       }
 	 return 0;
 }
