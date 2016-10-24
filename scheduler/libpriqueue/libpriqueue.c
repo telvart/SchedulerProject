@@ -216,7 +216,7 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-
+/*
       if (q->first == NULL)
       {
         return 0;
@@ -254,11 +254,9 @@ int priqueue_remove(priqueue_t *q, void *ptr)
         }
         return numDeleted;
 
+      }*/
 
-
-      }
-
-      /*if(q->first == NULL)//Handles the empty case
+      if(q->first == NULL)//Handles the empty case
       {
             return 0;
       }
@@ -279,7 +277,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
                   q->size--;
                   numDeleted++;
             }
-      }*/
+      }
 
 }
 
