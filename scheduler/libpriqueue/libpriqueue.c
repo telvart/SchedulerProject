@@ -74,7 +74,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
             q->size++;
             return 0;*/
       }
-      else if(q->first == q->last)
+      else if(q->first == q->last) // case size = 1
       {
         struct node* temp2 = malloc(sizeof(temp2));
         temp2->next = NULL;
@@ -85,7 +85,21 @@ int priqueue_offer(priqueue_t *q, void *ptr)
         return 1;
       }
       else
-      {
+      {/*
+        struct node* temp3 = malloc(sizeof(temp3));
+        temp3->next=NULL;
+        temp3->content=ptr;
+        struct node* traverse= q->first;
+        while (q->cmp(traverse->content,temp3->content) < 0 && traverse->next != NULL)
+        {
+          traverse=traverse->next;
+        }
+        temp3->next = traverse->next;
+        traverse->next=temp3;
+        q->size++;
+        return q->size-1;
+*/
+
         struct node* temp3 =malloc(sizeof(temp3));
         temp3->next = NULL;
         temp3->content =ptr;
@@ -94,43 +108,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
         q->size++;
         return priqueue_size(q)-1;
       }
-      // else
-      // {
-      //     struct node* temp2= malloc(sizeof(struct node));//Node();
-      //     temp2->next=NULL;
-      //     temp2->content=ptr;
-      //
-      //     struct node* traverse=q->first;
-      //     while (traverse->next != NULL)
-      //     {
-      //       traverse=traverse->next;
-      //     }
-      //     traverse->next=&temp2;
-      //
-      //   q->size++;
-      //   return q->size-1;
-      // }
 
-      /*
-      if(q->first->next==NULL)//where q is size=1
-      {
-            struct node temp = {NULL,ptr};
-            q->first->next=&temp;
-            q->size++;
-            return 1;
-      }
-      struct node *temp;
-      temp = q->first;
-      while(&(temp->next)!=NULL)
-      {
-            temp=temp->next;
-      }
-      struct node temp2 = {NULL,ptr};
-      temp->next = &temp2;
-      q->size++;
-      return priqueue_size(q)-1;
-      //	return -1;
-      */
 }
 
 
@@ -144,7 +122,14 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-	return q->first;
+	if (q->first==NULL && q->last==NULL)
+  {
+    return NULL;
+  }
+  else
+  {
+    return q->first->content;
+  }
 }
 
 
@@ -204,7 +189,7 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
-      if(priqueue_size(q)<index)//case where the index goes beyond the bounds
+      if(priqueue_size(q) < index || index > q->size)//case where the index goes beyond the bounds
       {
             return NULL;
       }
@@ -231,7 +216,49 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-      if(q->first == NULL)//Handles the empty case
+
+      if (q->first == NULL)
+      {
+        return 0;
+      }
+      if (q->size == 1 && q->first->content==ptr)
+      {
+          free(q->first);
+          q->first=NULL;
+          q->last=NULL;
+          q->size--;
+          return 1;
+      }
+
+      else
+      {
+        int numOccurances=0;
+        int numDeleted=0;
+        for(int i=0; i <q->size; i++) // get the number of occurances in the queue
+        {
+          if (priqueue_at(q, i) == ptr)
+          {
+            numOccurances++;
+          }
+        }
+        for(int i=0; i < numOccurances; i++ ) // for every occurance
+        {
+          for(int j=0; (j<q->size && priqueue_at(q,j) != NULL); j++) // go through list and delete it
+          {
+            if(priqueue_at(q, j) == ptr)
+            {
+              priqueue_remove_at(q,i);
+              numDeleted++;
+            }
+          }
+        }
+        return numDeleted;
+
+
+
+      }
+
+      /*if(q->first == NULL)//Handles the empty case
       {
             return 0;
       }
@@ -252,8 +279,8 @@ int priqueue_remove(priqueue_t *q, void *ptr)
                   q->size--;
                   numDeleted++;
             }
-      }
-	 return 0;
+      }*/
+
 }
 
 
