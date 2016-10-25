@@ -6,7 +6,7 @@
 
 #include "libpriqueue.h"
 
-
+//TODO: REMOVE AT, CHECK PEEK AND POLL
 /**
   Initializes the priqueue_t data structure.
 
@@ -285,68 +285,41 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-/*
-      if (q->first == NULL)
+      if (q->size < 1)
       {
         return 0;
       }
-      if (q->size == 1 && q->first->content==ptr)
+      if (q->cmp(ptr, q->first->content) == 0)
       {
-          free(q->first);
-          q->first=NULL;
-          q->last=NULL;
+        q->size--;
+        node* temp = q->first;
+        q->first=q->first->next;
+        free (temp);
+        return (priqueue_remove(q, ptr) + 1);
+      }
+      node* current = q->first->next;
+      node* parent = q->first;
+      int number = 0;
+
+      while(current != 0)
+      {
+        if (q->cmp(current->content, ptr) == 0)
+        {
+          node* temp = current->next;
+          parent->next = temp;
+          number++;
+          free(current);
+          current=temp;
           q->size--;
-          return 1;
-      }
-
-      else
-      {
-        int numOccurances=0;
-        int numDeleted=0;
-        for(int i=0; i <q->size; i++) // get the number of occurances in the queue
-        {
-          if (priqueue_at(q, i) == ptr)
-          {
-            numOccurances++;
-          }
         }
-        for(int i=0; i < numOccurances; i++ ) // for every occurance
+        else
         {
-          for(int j=0; (j<q->size && priqueue_at(q,j) != NULL); j++) // go through list and delete it
-          {
-            if(priqueue_at(q, j) == ptr)
-            {
-              priqueue_remove_at(q,i);
-              numDeleted++;
-            }
-          }
+          parent=current;
+          current=current->next;
+
         }
-        return numDeleted;
-
-      }*/
-
-      if(q->first == NULL)//Handles the empty case
-      {
-            return 0;
       }
-      struct node *temp = q->first;
-      struct node *temp2;
-      int numDeleted  = 0;
-      for(int i=0; i<priqueue_size(q);i++)//maybe an off one error here?
-      {
-            if(temp->content==NULL)
-            {
-                  return numDeleted;
-            }
-            if(temp->content==ptr)
-            {
-                  temp2=temp->next;
-                  free(temp->next);
-                  temp=temp2;
-                  q->size--;
-                  numDeleted++;
-            }
-      }
+      return number;
 
 }
 
@@ -362,6 +335,32 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
+
+      if(q->size == 0 || index < 0 || index > q->size)
+      {
+        return NULL;
+      }
+      if(q->size == 1 && index==0)
+      {
+        free(q->first);
+        q->size=0;
+        q->first=0;
+      }
+      else
+      {
+        node* temp=q->first;
+        for(int i=0; i< index-2; i++)
+        {
+          temp=temp->next;
+        }
+        node* temp2 = temp->next;
+        temp->next= temp2->next;
+        free(temp2);
+
+
+      }
+
+      /*
       if(index>priqueue_size(q))//handles the case where index is beyond scope
       {
             return NULL;
@@ -390,6 +389,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
       free(temp->next);//cut of the head
       temp->next = temp2;//replace the head with the tail
       return temp3;
+      */
 }
 
 
@@ -402,23 +402,6 @@ void *priqueue_remove_at(priqueue_t *q, int index)
 int priqueue_size(priqueue_t *q)
 {
   return q->size;
-      // int size=0;
-      // struct node *temp = q->first;
-      // if(q->first==NULL)
-      // {
-      //       free(temp);
-      //       return size;
-      // }
-      // else
-      // {
-      //       while(temp->next!=NULL)
-      //       {
-      //             size++;
-      //             temp=temp->next;
-      //       }
-      //       return size;
-      // }
-	//return 0;
 }
 
 
@@ -429,6 +412,16 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
+
+      node* current=q->first;
+      while(current != 0)
+      {
+        node* nextNode = current->next;
+        free(current);
+        current = nextNode;
+      }
+      q->first=0;
+  /*
       if(q->first==NULL)//handles case where its already empty
       {
             return;
@@ -450,5 +443,5 @@ void priqueue_destroy(priqueue_t *q)
             secondEl=q->first->next;
             free(q->first);
             q->first=secondEl;
-      }
+      }*/
 }
