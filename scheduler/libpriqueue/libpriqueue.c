@@ -6,7 +6,7 @@
 
 #include "libpriqueue.h"
 
-//TODO: REMOVE AT, CHECK PEEK AND POLL
+
 /**
   Initializes the priqueue_t data structure.
 
@@ -48,15 +48,15 @@ int priqueue_offer(priqueue_t *q, void *ptr)
 
         node* temp=q->first;
         node* parent = 0;
-        int number=0;
+        int indexInserted=0;
 
         while((temp!=0) && q->cmp(temp->content, ptr) < 0)
         {
           parent=temp;
           temp=temp->next;
-          number++;
+          indexInserted++;
         }
-        if (number == 0)
+        if (indexInserted == 0)
         {
           q->size++;
           newNode->next=q->first;
@@ -67,7 +67,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
         parent->next=newNode;
         newNode->next=temp;
         q->size++;
-        return number;
+        return indexInserted;
 
 //       int* myPtr=malloc(sizeof(int));
 //       myPtr=ptr;
@@ -262,10 +262,10 @@ void *priqueue_at(priqueue_t *q, int index)
       {
             return NULL;
       }
-	     else
+	    else
       {
             struct node *temp = q->first;
-            for(int i=0;i<index; i++)//maybe a one off error here?
+            for(int i=0;i<index && temp->next != 0; i++)//maybe a one off error here?
             {
                   temp=temp->next;
             }
@@ -336,62 +336,36 @@ int priqueue_remove(priqueue_t *q, void *ptr)
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
 
-      if(q->size == 0 || index < 0 || index > q->size)
+      node* traverse = q->first;
+      node* traverseNext=0;
+      int i = 1;
+      while(i < (index))
       {
-        return NULL;
+        traverse=traverse->next;
+        i++;
       }
-      if(q->size == 1 && index==0)
+      traverseNext = traverse;
+      traverse=traverse->next;
+      if(traverse->next == 0)
       {
-        free(q->first);
-        q->size=0;
-        q->first=0;
+        void* contentDeleted = traverse->content;
+        free(traverse);
+        q->size--;
+        traverseNext->next=0;
+        traverse=0;
+        return contentDeleted;
       }
       else
       {
-        node* temp=q->first;
-        for(int i=0; i< index-2; i++)
-        {
-          temp=temp->next;
-        }
-        node* temp2 = temp->next;
-        temp->next= temp2->next;
-        free(temp2);
-
-
+        traverseNext->next= traverse->next;
+        void* contentDeleted = traverse->content;
+        free(traverse);
+        q->size--;
+        traverse=0;
+        return contentDeleted;
       }
 
-      /*
-      if(index>priqueue_size(q))//handles the case where index is beyond scope
-      {
-            return NULL;
-      }
-      struct node *temp = q->first;
-      for(int i=1; i<index; i++)//begins at one because temp is set to first
-      {
-            temp=temp->next;
-      }//temp is now looking at the node before the node we want to delete
-      if(temp->next==NULL)//case where there is nothing to remove
-      {
-            //free(temp);
-            return NULL;
-      }
-      if(temp->next->next==NULL)//case where we're removing the last node
-      {
-            struct node *temp2=temp->next;//an actual node to hold return valu
-//            struct node *temp3=*(temp2);//a pointer to look at that node
-            free(temp->next);//free/delete the space
-            return temp2;//return the pointer
-      }//now we are at the general case where there is something after
-      //the node we're deleting
-      struct node *temp2 = temp->next->next;//store the tail in temp2
-      struct node *temp3=temp->next;
-//      struct node *temp4=*(temp3);
-      free(temp->next);//cut of the head
-      temp->next = temp2;//replace the head with the tail
-      return temp3;
-      */
 }
-
 
 /**
   Returns the number of elements in the queue.

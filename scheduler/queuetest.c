@@ -39,6 +39,19 @@ int main()
 	for (i = 0; i < priqueue_size(&q); i++)
 		printf("%d ", *((int *)priqueue_at(&q, i)) );
 
+	//int removedVal= *((int* )priqueue_remove_at(&q,4));
+
+	//printf("\n\nRemoved value: %d\n\n" , removedVal);
+
+
+	for (i = 0; i < priqueue_size(&q); i++)
+		printf("%d ", *((int *)priqueue_at(&q, i)) );
+
+	//priqueue_t size1, sizen;
+
+//	priqueue_init(&size1, compare1);
+//	priqueue_init(&sizen, compare1);
+
 
 
 
