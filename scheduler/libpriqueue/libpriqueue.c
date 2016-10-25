@@ -22,7 +22,7 @@ void priqueue_init(priqueue_t *q, comparer new_cmp)
   q->size=0;
   q->first = NULL;
   q->cmp=new_cmp;
-  //jamie saidwork on this fuction, its missing some stuff, specifically compare function
+
 }
 
 
@@ -35,10 +35,10 @@ void priqueue_init(priqueue_t *q, comparer new_cmp)
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-
         node* newNode = malloc(sizeof(node));
         newNode->content=ptr;
         newNode->next=0;
+
         if(q->size==0)
         {
           q->size++;
@@ -56,6 +56,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
           temp=temp->next;
           indexInserted++;
         }
+
         if (indexInserted == 0)
         {
           q->size++;
@@ -68,116 +69,6 @@ int priqueue_offer(priqueue_t *q, void *ptr)
         newNode->next=temp;
         q->size++;
         return indexInserted;
-
-//       int* myPtr=malloc(sizeof(int));
-//       myPtr=ptr;
-//       /* if (q->first == NULL) */
-//       /* { */
-//       /*   struct node temp = {NULL, ptr}; */
-//       /*   q->first=&temp; */
-//       /* } */
-//       /* else */
-//       /* { */
-//         struct node* traverse = q->first;
-//       /*   while (traverse->next != NULL) */
-//       /*   { */
-//       /*     traverse = traverse->next; */
-//       /*   } */
-//       /*   struct node temp = {NULL, ptr}; */
-//       /*   traverse->next=&temp; */
-//
-//       /* } */
-//       //      return 1;
-//
-//       if(q->first==NULL && q->last == NULL)//where q is empty
-//       {
-//             struct node* temp=malloc(sizeof(temp));
-//             temp->next=NULL;
-//             temp->content=ptr;
-//             q->first=temp;
-//             q->last=temp;
-//             q->size++;
-//             return 0;
-//             /*
-//             struct node temp;// = {NULL,ptr};
-//             temp.next=NULL;
-//             temp.content=ptr;
-//             q->first = &temp;
-//             q->last = &temp;
-//             q->size++;
-//             return 0;*/
-//       }
-//       else if(q->first == q->last) // case size = 1
-//       {
-//         struct node* temp2 = malloc(sizeof(temp2));
-//         temp2->next = NULL;
-//         temp2->content =ptr;
-//
-//         /*
-//           if(priority ptr > priority q->first)
-//           {
-//             insert before first
-//           }
-//           else
-//           {
-//           insert after first
-//           }
-//         */
-//          if(q->cmp(q->first->content, myPtr) > 0)
-//          {
-//            temp2->next=q->first;
-//            q->first=temp2;
-//          }
-//          else
-//          {
-//           q->first->next = temp2;
-//           q->last = temp2;
-//          }
-//         q->size++;
-//         return 1;
-//       }
-//       else
-//       {/*
-//         struct node* temp3 = malloc(sizeof(temp3));
-//         temp3->next=NULL;
-//         temp3->content=ptr;
-//         struct node* traverse= q->first;
-//         while (q->cmp(traverse->content,temp3->content) < 0 && traverse->next != NULL)
-//         {
-//           traverse=traverse->next;
-//         }
-//         temp3->next = traverse->next;
-//         traverse->next=temp3;
-//         q->size++;
-//         return q->size-1;
-// */
-//         struct node* temp3 =malloc(sizeof(temp3));
-//         temp3->next = NULL;
-//         temp3->content =myPtr;
-//
-//         if(q->cmp(q->first->content,temp3->content)<0)
-//         {
-//           struct node* temp4;
-//           temp4=q->first->next;//save for later
-//           q->first=temp3;
-//           temp3->next=temp4;
-//           q->size++;
-//           // return priqueue_size(q)-1;
-//         }
-//         else
-//         {
-//           while (q->cmp(traverse->content,temp3->content) < 0 && traverse->next != NULL)
-//           {
-//             traverse=traverse->next;
-//           }
-//           temp3->next = traverse->next;
-//           traverse->next=temp3;
-//   //        q->last->next=temp3;
-//     //      q->last = temp3;
-//           q->size++;
-//           return priqueue_size(q)-1;
-//         }
-//       }
 
 }
 
@@ -290,7 +181,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
       }
       node* current = q->first->next;
       node* parent = q->first;
-      int number = 0;
+      int numRemoved = 0;
 
       while(current != 0)
       {
@@ -298,7 +189,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
         {
           node* temp = current->next;
           parent->next = temp;
-          number++;
+          numRemoved++;
           free(current);
           current=temp;
           q->size--;
@@ -310,7 +201,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
 
         }
       }
-      return number;
+      return numRemoved;
 
 }
 
@@ -386,27 +277,5 @@ void priqueue_destroy(priqueue_t *q)
         current = nextNode;
       }
       q->first=0;
-  /*
-      if(q->first==NULL)//handles case where its already empty
-      {
-            return;
-      }
-      if(q->first->next==NULL)//handles the case where size==1
-      {
-            free(q->first);
-            return;
-      }
-      struct node *secondEl;//holds the second element while we delete the first
-//      struct node *temp2=temp->next;
-      for(int i=1;i<priqueue_size(q);i++)
-      {
-            if(q->first->next==NULL)
-            {
-                  free(q->first);
-                  return;
-            }
-            secondEl=q->first->next;
-            free(q->first);
-            q->first=secondEl;
-      }*/
+
 }
