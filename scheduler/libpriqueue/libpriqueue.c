@@ -36,8 +36,13 @@ void priqueue_init(priqueue_t *q, comparer new_cmp)
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-
-
+      if(ptr==NULL)
+      {
+        printf("They gave us shitty data!");
+        return 0;
+      }
+      int* myPtr=malloc(sizeof(int));
+      myPtr=ptr;
       /* if (q->first == NULL) */
       /* { */
       /*   struct node temp = {NULL, ptr}; */
@@ -45,7 +50,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
       /* } */
       /* else */
       /* { */
-      /*   struct node* traverse = q->first; */
+        struct node* traverse = q->first;
       /*   while (traverse->next != NULL) */
       /*   { */
       /*     traverse = traverse->next; */
@@ -79,8 +84,27 @@ int priqueue_offer(priqueue_t *q, void *ptr)
         struct node* temp2 = malloc(sizeof(temp2));
         temp2->next = NULL;
         temp2->content =ptr;
-        q->first->next = temp2;
-        q->last = temp2;
+
+        /*
+          if(priority ptr > priority q->first)
+          {
+            insert before first
+          }
+          else
+          {
+          insert after first
+          }
+        */
+         if(q->cmp(q->first->content, myPtr) > 0)
+         {
+           temp2->next=q->first;
+           q->first=temp2;
+         }
+         else
+         {
+          q->first->next = temp2;
+          q->last = temp2;
+         }
         q->size++;
         return 1;
       }
@@ -99,14 +123,35 @@ int priqueue_offer(priqueue_t *q, void *ptr)
         q->size++;
         return q->size-1;
 */
-
         struct node* temp3 =malloc(sizeof(temp3));
         temp3->next = NULL;
-        temp3->content =ptr;
-        q->last->next=temp3;
-        q->last = temp3;
-        q->size++;
-        return priqueue_size(q)-1;
+        temp3->content =myPtr;
+
+        if(q->cmp(q->first->content,temp3->content)<0)
+        {
+          struct node* temp4;
+          temp4=q->first->next;//save for later
+          q->first=temp3;
+          temp3->next=temp4;
+          q->size++;
+          // return priqueue_size(q)-1;
+        }
+        else
+        {
+          while (q->cmp(traverse->content,temp3->content) < 0 && traverse->next != NULL)
+          {
+            traverse=traverse->next;
+          }
+          temp3->next = traverse->next;
+          traverse->next=temp3;
+  //        q->last->next=temp3;
+    //      q->last = temp3;
+          q->size++;
+          return priqueue_size(q)-1;
+        }
+
+
+
       }
 
 }
