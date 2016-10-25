@@ -221,29 +221,20 @@ void *priqueue_poll(priqueue_t *q)
       {
             struct node *temp = q->first;
             void* pop = q->first->content;
-          //free(q->first);TODO FIX MEMLEEK!
-            q->first=NULL;
+            free(q->first);
+            q->first=0;
             q->size--;
             return pop;
-            //q->first = NULL;//Memory leak? need to free rather than reallocate?
-            return temp->content;
       }
-      else
+      else // general case
       {
-        struct node* temp4 = q->first->next;
-        void* pop = q->first->content;
-      //free(q->first);TODO FIX MIMLEEK!
-        q->first = temp4;
-        q->size--;
-        return pop;
+            struct node* temp = q->first;
+            void* contentRemoved = temp->content;
+            q->first=temp->next;
+            free(temp);
+            q->size--;
+            return contentRemoved;
       }
-      // else
-      // {
-      //       struct node *temp = q->first;//save the first node that we'll return later
-      //       q->first = q->first->next;//makes the front of the queue point at the second node of the queue
-      //       return temp->content;
-      // }
-
 }
 
 
