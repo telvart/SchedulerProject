@@ -21,7 +21,6 @@ typedef struct _priqueue_t
 {
   int size;
   struct node* first;
-  struct node* last;
   comparer cmp;
 } priqueue_t;
 

@@ -52,7 +52,7 @@ int main()
 	printf("Elements removed: %d (expected 2).\n", vals_removed);
 	printf("Total elements: %d (expected 2).\n", priqueue_size(&q));
 
-	printf("after remove ");
+	printf("after remove \n");
 	for (i = 0; i < priqueue_size(&q); i++)
 		printf("%d ", *((int *)priqueue_at(&q, i)) );
 	printf("\n");
