@@ -15,6 +15,7 @@ int   fcfsCompare(const void* a, const void* b)
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
 
+  //return b1->arrivalTime - a1->arrivalTime;
   return a1->arrivalTime - b1->arrivalTime;
 }
 
@@ -125,7 +126,13 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-	return -1;
+  job_t* newJob = malloc(sizeof(newJob));
+  newJob->jobid=job_number;
+  newJob->arrivalTime=time;
+  newJob->runtimeLeft=running_time;
+  newJob->priority=priority;
+	priqueue_offer(&queue, newJob);
+  return 0;
 }
 
 
@@ -145,7 +152,22 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
-	return -1;
+  job_t* myJobt = (job_t*)priqueue_peek(&queue);
+  // if(myJobt->jobid!=job_number)
+  // {
+  //   printf("Wrong ID!");
+  //   return -1;
+  // }
+  // else
+  // {
+    myJobt=priqueue_poll(&queue);
+    free(myJobt);
+    if(priqueue_size(&queue)>0)
+    {
+      myJobt = (job_t*)priqueue_peek(&queue);
+      myJobt->currentStatus=0;
+    }
+	return 0;
 }
 
 
@@ -236,7 +258,8 @@ void scheduler_show_queue()
   {
     int curid = ((job_t*)priqueue_at(&queue, i))->jobid;
     int curStatus = ((job_t*)priqueue_at(&queue, i))->currentStatus;
-
-    printf("ID: %d  STATUS: %d, ", curid, curStatus);
+    int curPrior = ((job_t*)priqueue_at(&queue, i))->priority;
+    int arriv = ((job_t*)priqueue_at(&queue, i))->arrivalTime;
+    printf(" ID:%d  STATUS: %d PRIORITY: %d Ariv: %d ", curid, curStatus, curPrior, arriv);
   }
 }
