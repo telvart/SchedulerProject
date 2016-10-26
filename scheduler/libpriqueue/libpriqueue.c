@@ -14,7 +14,7 @@
     - You may assume this function will only be called once per instance of priqueue_t
     - You may assume this function will be the first function called using an instance of priqueue_t.
   @param q a pointer to an instance of the priqueue_t data structure
-  @param comparer a function pointer that compares two elements.
+  @param new_cmp a function pointer that compares two elements.
   See also @ref comparer-page
  */
 void priqueue_init(priqueue_t *q, comparer new_cmp)

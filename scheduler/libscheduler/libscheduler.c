@@ -6,25 +6,62 @@
 #include <string.h>
 
 #include "libscheduler.h"
-#include "../libpriqueue/libpriqueue.h"
 
 
-/**
-  Stores information making up a job to be scheduled including any statistics.
 
-  You may need to define some global variables or a struct to store your job queue elements.
-*/
-//this is what will be passed to priqueue_offer to store in the queue
-typedef struct _job_t
+//these functions will be used to store jobs according to the current scheme
+int   fcfsCompare(const void* a, const void* b)
 {
-  int jobid;
-  int priority;
-  //other control members will be added as necessary. 
-} job_t;
+  job_t* a1 = (job_t*)a;
+  job_t* b1 = (job_t*)b;
 
+  return a1->arrivalTime - b1->arrivalTime;
+}
+
+int   sjfCompare (const void* a, const void* b)
+{
+  job_t* a1 = (job_t*)a;
+  job_t* b1 = (job_t*)b;
+
+  return a1->runtimeLeft - b1->runtimeLeft;
+}
+
+int   psjfCompare(const void* a, const void* b)
+{
+  job_t* a1 = (job_t*)a;
+  job_t* b1 = (job_t*)b;
+
+  return a1->runtimeLeft - b1->runtimeLeft;
+
+}
+
+int   priorityCompare(const void* a, const void* b)
+{
+  job_t* a1 = (job_t*)a;
+  job_t* b1 = (job_t*)b;
+  return a1->priority - b1->priority;
+}
+
+int   roundrobinCompare(const void* a, const void* b)
+{
+  job_t* a1 = (job_t*)a;
+  job_t* b1 = (job_t*)b;
+
+  return -1;
+}
+
+//preemptive priority
+int   ppriCompare(const void* a, const void* b)
+{
+  job_t* a1 = (job_t*)a;
+  job_t* b1 = (job_t*)b;
+
+  return -1;
+}
 
 /**
   Initalizes the scheduler.
+  possible schemes: FCFS = 0, SJF, PSJF, PRI, PPRI, RR
 
   Assumptions:
     - You may assume this will be the first scheduler function called.
@@ -37,7 +74,32 @@ typedef struct _job_t
 */
 void scheduler_start_up(int cores, scheme_t scheme)
 {
-
+  numCores = cores;
+  currentScheme = scheme;
+  switch(scheme)
+  {
+    case FCFS:
+      priqueue_init(&queue, fcfsCompare);
+      break;
+    case SJF:
+      priqueue_init(&queue, sjfCompare);
+      break;
+    case PSJF:
+      priqueue_init(&queue, psjfCompare);
+      break;
+    case PRI:
+      priqueue_init(&queue, priorityCompare);
+      break;
+    case PPRI:
+      priqueue_init(&queue, ppriCompare);
+      break;
+    case RR:
+      priqueue_init(&queue, roundrobinCompare);
+      break;
+    default:
+      printf("INVALID SCHEME SELECTION\n");
+      break;
+  }
 }
 
 
@@ -153,7 +215,7 @@ float scheduler_average_response_time()
 */
 void scheduler_clean_up()
 {
-
+  priqueue_destroy(&queue);
 }
 
 
@@ -170,5 +232,11 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
+  for(int i = 0; i< priqueue_size(&queue); i++)
+  {
+    int curid = ((job_t*)priqueue_at(&queue, i))->jobid;
+    int curStatus = ((job_t*)priqueue_at(&queue, i))->currentStatus;
 
+    printf("ID: %d  STATUS: %d, ", curid, curStatus);
+  }
 }

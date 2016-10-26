@@ -3,11 +3,46 @@
 
 #ifndef LIBSCHEDULER_H_
 #define LIBSCHEDULER_H_
+#include "../libpriqueue/libpriqueue.h"
 
 /**
   Constants which represent the different scheduling algorithms
 */
 typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;
+
+scheme_t currentScheme;
+int numCores;
+priqueue_t queue;
+
+/**
+  Stores information making up a job to be scheduled including any statistics.
+
+  You may need to define some global variables or a struct to store your job queue elements.
+*/
+typedef struct _job_t
+{
+  int jobid;
+  int priority;
+  int arrivalTime;
+  int runtimeLeft;
+  int currentStatus; // 0 for waiting, -1 for currently running
+  int waitingTime;
+  int turnaroundTime;
+  int responseTime;
+
+  //other control members will be added as necessary.
+} job_t;
+
+
+
+//functions to be used for inserting into queue
+int   fcfsCompare         (const void* a, const void* b);
+int   sjfCompare          (const void* a, const void* b);
+int   psjfCompare         (const void* a, const void* b);
+int   priorityCompare     (const void* a, const void* b);
+int   roundrobinCompare   (const void* a, const void* b);
+int   ppriCompare         (const void* a, const void* b);
+
 
 void  scheduler_start_up               (int cores, scheme_t scheme);
 int   scheduler_new_job                (int job_number, int time, int running_time, int priority);
