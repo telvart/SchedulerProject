@@ -7,6 +7,8 @@
 
 #include "libscheduler.h"
 
+int totalWaitTime = 0;
+int totalResponsetime = 0;
 
 
 //these functions will be used to store jobs according to the current scheme
@@ -122,6 +124,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
   @return -1 if no scheduling changes should be made.
 
  */
+
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
   job_t* newJob = malloc(sizeof(newJob));
@@ -263,7 +266,8 @@ void scheduler_show_queue()
     int curStatus = ((job_t*)priqueue_at(&queue, i))->currentStatus;
     int curPrior = ((job_t*)priqueue_at(&queue, i))->priority;
     int arriv = ((job_t*)priqueue_at(&queue, i))->arrivalTime;
-    printf(" ID: %d STAT: %d PRI: %d Ariv: %d, ",
-     curid, curStatus, curPrior, arriv);
+    //printf(" ID: %d STAT: %d PRI: %d Ariv: %d, ",
+     //curid, curStatus, curPrior, arriv);
+     printf(" %d(%d)" , curid, curStatus);
   }
 }
