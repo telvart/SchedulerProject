@@ -97,9 +97,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
     case RR:
       priqueue_init(&queue, roundrobinCompare);
       break;
-    default:
-      printf("INVALID SCHEME SELECTION\n");
-      break;
+
   }
 }
 
@@ -150,8 +148,13 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   @return job_number of the job that should be scheduled to run on core core_id
   @return -1 if core should remain idle.
  */
+
+
+
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
+
+
   job_t* myJobt = (job_t*)priqueue_peek(&queue);
   // if(myJobt->jobid!=job_number)
   // {
@@ -167,7 +170,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
       myJobt = (job_t*)priqueue_peek(&queue);
       myJobt->currentStatus=0;
     }
-	return 0;
+	 return 0;
 }
 
 
@@ -260,6 +263,7 @@ void scheduler_show_queue()
     int curStatus = ((job_t*)priqueue_at(&queue, i))->currentStatus;
     int curPrior = ((job_t*)priqueue_at(&queue, i))->priority;
     int arriv = ((job_t*)priqueue_at(&queue, i))->arrivalTime;
-    printf(" ID:%d  STATUS: %d PRIORITY: %d Ariv: %d ", curid, curStatus, curPrior, arriv);
+    printf(" ID: %d STAT: %d PRI: %d Ariv: %d, ",
+     curid, curStatus, curPrior, arriv);
   }
 }

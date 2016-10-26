@@ -17,6 +17,9 @@
   @param new_cmp a function pointer that compares two elements.
   See also @ref comparer-page
  */
+
+
+
 void priqueue_init(priqueue_t *q, comparer new_cmp)
 {
   q->size=0;
