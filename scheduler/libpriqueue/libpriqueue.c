@@ -54,6 +54,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
         int indexInserted=0;
 
         while((temp!=0) && q->cmp(temp->content, ptr) < 0)
+      //  while((temp!=0) && q->cmp(temp->content, ptr) > 0)
         {
           parent=temp;
           temp=temp->next;

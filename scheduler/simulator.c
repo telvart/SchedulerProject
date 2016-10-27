@@ -265,6 +265,7 @@ int main(int argc, char **argv)
 				i--;
 
 				// Set the new job
+				printf("new job id: %d\n",new_job_id);
 				if ( new_job_id != -1 && !set_active_job(new_job_id, core_id, jobs, active_jobs) )
 				{
 					printf("The scheduler_job_finished() selected an invalid job (job_id == %d).\n", new_job_id);
@@ -338,9 +339,10 @@ int main(int argc, char **argv)
 				int new_job_core_id = scheduler_new_job(jobs[i].job_id, time, jobs[i].run_time, jobs[i].priority);
 				jobs[i].arrived = 1;
 				jobs_alive++;
-
+				//TODO: LOOK HERE!
 				if (new_job_core_id >= 0 && new_job_core_id < cores)
 				{
+				//	printf("cores = %d\n",cores);
 					printf("A new job, job %d (running time=%d, priority=%d), arrived. Job %d is now running on core %d.\n",
 							jobs[i].job_id, jobs[i].run_time, jobs[i].priority, jobs[i].job_id, new_job_core_id);
 					printf("  Queue: "); scheduler_show_queue(); printf("\n\n");
