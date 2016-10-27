@@ -7,8 +7,7 @@
 
 #include "libscheduler.h"
 
-int totalWaitTime = 0;
-int totalResponsetime = 0;
+
 
 
 //these functions will be used to store jobs according to the current scheme
@@ -16,8 +15,6 @@ int   fcfsCompare(const void* a, const void* b)
 {
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
-  printf("\na1 arrival time: %d",a1->arrivalTime);
-  printf("\nb1 arrival time: %d\n",b1->arrivalTime);
   //return b1->arrivalTime - a1->arrivalTime;
   return a1->arrivalTime - b1->arrivalTime;
 }
@@ -125,7 +122,8 @@ void scheduler_start_up(int cores, scheme_t scheme)
   @return -1 if no scheduling changes should be made.
 
  */
- int currentTimetoExecute = 0;
+double totalWaitTime = 0;
+double totalResponseTime = 0;
 
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
@@ -135,31 +133,32 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       newJob->runtimeLeft=running_time;
       newJob->priority=priority;
 
-      currentTimetoExecute = running_time;
-
       if(currentScheme==FCFS)
       {
-        //ISSUE IS HERE!
         priqueue_offer(&queue,newJob);
-        // if(priqueue_size(&queue)==1)
-        // {
-        //   return 0;
-        // }
-        // else
-        // {
-        //   return -1;
-        // }
-        //return(priqueue_size(&queue)-1);
-        if(priqueue_size(&queue)==1)
+
+        if( ((job_t*)priqueue_at(&queue,0))->jobid != job_number)
+        {
+
+          newJob -> currentStatus = -1;
+          return -1;
+        }
+        else
+        {
+          newJob -> currentStatus = 0;
+          return 0;
+        }
+        /*
+        if(priqueue_size(&queue) ==1)
         {
           return 0;
         }
         else
         {
           return -1;
-        }
+        }*/
       }
-  return 0;
+  return -1;
 }
 
 
@@ -179,41 +178,39 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 
 
+double numJobsFinished = 0;
+double totalTurnAroundTime = 0;
 
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
-
+      numJobsFinished++;
       if(currentScheme==FCFS)
       {
-            // if (job_number == 0 && time == currentTimetoExecute)
-            // {
-            //       priqueue_poll(&queue);
-            // }
-      }
-  job_t* myJobt = (job_t*)priqueue_peek(&queue);
-  // if(myJobt->jobid!=job_number)
-  // {
-  //   printf("Wrong ID!");
-  //   return -1;
-  // }
-  // else
-  // {
-    int returnVal;
-    myJobt=priqueue_poll(&queue);
-    free(myJobt);
-    if(priqueue_size(&queue)>0)
-    {
-      myJobt = (job_t*)priqueue_peek(&queue);
-      myJobt->currentStatus=0;
-      returnVal = ((job_t*)priqueue_peek(&queue))->jobid;
-      printf("returnVal: %d\n",returnVal);
-      return returnVal;
-    }
-    else
-    {
-      return -1;
-    }
+        int nextJobNum;
 
+        int lastTurnAroundTime = time - ((job_t*)priqueue_peek(&queue))->arrivalTime;
+        totalTurnAroundTime += lastTurnAroundTime;
+        
+        job_t* myJobt=priqueue_poll(&queue);
+        free(myJobt);
+
+        if (priqueue_not_empty(&queue))
+        {
+          myJobt = (job_t*)priqueue_peek(&queue);
+          myJobt->currentStatus=0;
+
+          totalWaitTime += (time - myJobt->arrivalTime);
+          totalResponseTime += (time - myJobt->arrivalTime);
+
+          nextJobNum = ((job_t*)priqueue_peek(&queue))->jobid;
+          return nextJobNum;
+        }
+        else
+        {
+          return -1;
+        }
+
+      }
 
 }
 
@@ -246,7 +243,8 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-	return 0.0;
+	return totalWaitTime/numJobsFinished;
+
 }
 
 
@@ -259,7 +257,7 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-	return 0.0;
+	return totalTurnAroundTime/numJobsFinished;
 }
 
 
@@ -272,7 +270,7 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
-	return 0.0;
+	return totalResponseTime/numJobsFinished;
 }
 
 

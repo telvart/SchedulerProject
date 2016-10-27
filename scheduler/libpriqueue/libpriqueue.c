@@ -36,6 +36,18 @@ void priqueue_init(priqueue_t *q, comparer new_cmp)
   @param ptr a pointer to the data to be inserted into the priority queue
   @return The zero-based index where ptr is stored in the priority queue, where 0 indicates that ptr was stored at the front of the priority queue.
  */
+int priqueue_not_empty(priqueue_t* q)
+{
+  if (q->size > 0)
+  {
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
         node* newNode = malloc(sizeof(node));

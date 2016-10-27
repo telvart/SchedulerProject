@@ -265,7 +265,7 @@ int main(int argc, char **argv)
 				i--;
 
 				// Set the new job
-				printf("new job id: %d\n",new_job_id);
+			
 				if ( new_job_id != -1 && !set_active_job(new_job_id, core_id, jobs, active_jobs) )
 				{
 					printf("The scheduler_job_finished() selected an invalid job (job_id == %d).\n", new_job_id);

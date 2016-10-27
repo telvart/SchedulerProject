@@ -23,7 +23,7 @@ int main()
 	priqueue_init(&q, compare1);
 	priqueue_init(&q2, compare2);
 
-	/* Pupulate some data... */
+	/* Populate some data... */
 	int *values = malloc(100 * sizeof(int));
 
 	int i;
