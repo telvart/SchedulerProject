@@ -18,7 +18,7 @@ int   fcfsCompare(const void* a, const void* b)
   //return b1->arrivalTime - a1->arrivalTime;
   return a1->arrivalTime - b1->arrivalTime;
 }
-int sjfCounter = 0;
+
 int   sjfCompare (const void* a, const void* b)
 {
   job_t* a1 = (job_t*)a;
@@ -57,7 +57,7 @@ int   ppriCompare(const void* a, const void* b)
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
 
-  return -1;
+  return a1->priority - b1->priority;
 }
 
 //GLOBAL VARIABLES
@@ -85,6 +85,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
   numCores = cores;
   currentScheme = scheme;
   jobsArray = malloc( cores * (sizeof(job_t)));
+
   for (int i =0; i<cores; i++)
   {
     jobsArray[i] = NULL;
@@ -156,40 +157,86 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       job_t* newJob = malloc(sizeof(newJob));
       newJob->jobid=job_number;
       newJob->arrivalTime=time;
+      newJob->lastTimeScheduled = time;
       newJob->runTime=running_time;
       newJob->priority=priority;
+      newJob->waitTime = 0;
+
+      job_t* currentJob = jobsArray[0];
 
       if(!preemptFlag)
       {
         if(priqueue_empty(&queue) && jobsArray[0] == NULL)
         {
           jobsArray[0] = newJob;
-          newJob -> currentStatus = 0;
           return 0;
         }
         else if (priqueue_empty(&queue) && jobsArray[0] != NULL)
         {
           priqueue_offer(&queue, newJob);
-          newJob->currentStatus = -1;
+          return -1;
+        }
+        else if (priqueue_not_empty(&queue) && jobsArray != NULL)
+        {
+          priqueue_offer(&queue, newJob);
           return -1;
         }
         return -1;
 
-
       }
       else // preemptive algorithm was selected, different conditions
+      //TODO: PROBLEM ADDING BACK INTO QUEUE
+      //HAS TO DO WITH COMPARISON 
       {
-        if(priqueue_empty(&queue) && jobsArray[0] == NULL)
+        if (currentScheme == PPRI)
         {
-          jobsArray[0] = newJob;
-          newJob->currentStatus = 0;
-          return 0;
+          if (priqueue_empty(&queue) && jobsArray[0] == NULL)
+          {
+            jobsArray[0] = newJob;
+            return 0;
+          }
+
+          else if(priqueue_empty(&queue) && jobsArray[0] != NULL)
+          {
+            if(newJob -> priority < currentJob->priority)
+            {
+              job_t* preemptedJob = jobsArray[0];
+              preemptedJob -> runTime = time - preemptedJob->arrivalTime;
+              priqueue_offer(&queue, preemptedJob);
+              jobsArray[0] = newJob;
+              return 0;
+            }
+            else
+            {
+              priqueue_offer(&queue, newJob);
+              return -1;
+            }
+          }
+
+          else if(priqueue_not_empty(&queue))
+          {
+            if(newJob -> priority < currentJob -> priority)
+            {
+              jobsArray[0] -> runTime = time - jobsArray[0]->arrivalTime;
+              priqueue_offer(&queue, jobsArray[0]);
+
+              jobsArray[0] = newJob;
+              return 0;
+            }
+
+            else
+            {
+              priqueue_offer(&queue, newJob);
+              return -1;
+            }
+          }
         }
-        else if (priqueue_empty(&queue) && jobsArray[0] != NULL)
+        else if(currentScheme == PSJF)
         {
 
         }
       }
+
 
   return -1;
 }
@@ -211,71 +258,61 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
-      numJobsFinished++;
+        numJobsFinished++;
 
-      if(!preemptFlag)
-      {
-        if(priqueue_empty(&queue))
+        if( !preemptFlag)
         {
+          if(priqueue_empty(&queue))
+          {
+            job_t* lastJob = jobsArray[0];
+            totalTurnAroundTime += time - lastJob->arrivalTime;
+            free(lastJob);
+            jobsArray[0] = NULL;
+            return -1;
+          }
+          else
+          {
+            job_t* lastJob = jobsArray[0];
+            totalTurnAroundTime += time - lastJob->arrivalTime;
+            free(lastJob);
 
-          job_t* lastJob = jobsArray[0];
-          totalTurnAroundTime += time - lastJob->arrivalTime;
-          free(lastJob);
-          jobsArray[0] = NULL;
-          return -1;
+            job_t* nextJob = (job_t*)priqueue_poll(&queue);
+            jobsArray[0] = nextJob;
+
+            totalWaitTime+= time - nextJob->arrivalTime;
+            totalResponseTime+= time - nextJob->arrivalTime;
+
+            return nextJob->jobid;
+          }
 
         }
         else
         {
+          if(priqueue_empty(&queue))
+          {
+            job_t* lastJob = jobsArray[0];
+            totalWaitTime += lastJob->waitTime;
 
-          job_t* lastJob = jobsArray[0];
-          totalTurnAroundTime += time - lastJob->arrivalTime;
-          free(lastJob);
-          job_t* nextJob = (job_t*)priqueue_poll(&queue);
-          jobsArray[0] = nextJob;
-          totalWaitTime+= time - nextJob->arrivalTime;
-          totalResponseTime+= time - nextJob->arrivalTime;
+            free(lastJob);
+            jobsArray[0] = NULL;
+            return -1;
+          }
+          else
+          {
+            job_t* lastJob = jobsArray[0];
+            totalWaitTime+=lastJob->waitTime;
 
-          return nextJob->jobid;
+            free(lastJob);
 
+            job_t* nextJob = (job_t*)priqueue_poll(&queue);
+
+            jobsArray[0] = nextJob;
+
+            nextJob->lastTimeScheduled = time;
+
+            return nextJob->jobid;
+          }
         }
-
-      }
-      else
-      {
-        return -1;
-      }
-
-
-    //  if(currentScheme==FCFS)
-    //  {
-    /*
-        int nextJobNum;
-
-        int lastTurnAroundTime = time - ((job_t*)priqueue_peek(&queue))->arrivalTime;
-        totalTurnAroundTime += lastTurnAroundTime;
-
-        job_t* myJobt=priqueue_poll(&queue);
-        free(myJobt);
-
-        if (priqueue_not_empty(&queue))
-        {
-          myJobt = (job_t*)priqueue_peek(&queue);
-          myJobt->currentStatus=0;
-
-          totalWaitTime += (time - myJobt->arrivalTime);
-          totalResponseTime += (time - myJobt->arrivalTime);
-
-          nextJobNum = ((job_t*)priqueue_peek(&queue))->jobid;
-          return nextJobNum;
-        }
-        else
-        {
-          return -1;
-        }
-      //}
-      return -1;
-*/
 }
 
 
@@ -364,15 +401,23 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
+  if(jobsArray[0] != NULL)
+  {
+    printf(" Current: %d q: ", jobsArray[0] -> jobid);
+  }
+  else
+  {
+    printf("NO JOB CURRENTLY RUNNING");
+  }
   for(int i = 0; i< priqueue_size(&queue); i++)
   {
     int curid = ((job_t*)priqueue_at(&queue, i))->jobid;
-    int curStatus = ((job_t*)priqueue_at(&queue, i))->currentStatus;
     int curPrior = ((job_t*)priqueue_at(&queue, i))->priority;
     int arriv = ((job_t*)priqueue_at(&queue, i))->arrivalTime;
     int currunTime = ((job_t*)priqueue_at(&queue, i))->runTime;
     //printf(" ID: %d STAT: %d PRI: %d Ariv: %d, ",
      //curid, curStatus, curPrior, arriv);
-     printf(" %d(%d) runTime: %d, " , curid, curStatus, currunTime);
+
+     printf(" %d, " , curid);
   }
 }

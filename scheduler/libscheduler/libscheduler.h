@@ -17,7 +17,9 @@ typedef struct _job_t
   int priority;
   int arrivalTime;
   int runTime;
-  int currentStatus; // -1 for waiting, 0 for running
+  
+  int waitTime;
+  int lastTimeScheduled;
 
 
   //other control members will be added as necessary.
