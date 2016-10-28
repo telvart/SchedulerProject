@@ -48,6 +48,15 @@ int priqueue_not_empty(priqueue_t* q)
   }
 }
 
+int priqueue_empty(priqueue_t* q)
+{
+  if (q->size == 0)
+  {
+    return 1;
+  }
+  return 0;
+}
+
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
         node* newNode = malloc(sizeof(node));

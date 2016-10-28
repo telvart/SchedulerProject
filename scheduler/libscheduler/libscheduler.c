@@ -60,6 +60,12 @@ int   ppriCompare(const void* a, const void* b)
   return -1;
 }
 
+//GLOBAL VARIABLES
+double totalWaitTime = 0;
+double totalResponseTime = 0;
+double numJobsFinished = 0;
+double totalTurnAroundTime = 0;
+
 /**
   Initalizes the scheduler.
   possible schemes: FCFS = 0, SJF, PSJF, PRI, PPRI, RR
@@ -73,10 +79,17 @@ int   ppriCompare(const void* a, const void* b)
   @param cores the number of cores that is available by the scheduler. These cores will be known as core(id=0), core(id=1), ..., core(id=cores-1).
   @param scheme  the scheduling scheme that should be used. This value will be one of the six enum values of scheme_t
 */
+
 void scheduler_start_up(int cores, scheme_t scheme)
 {
   numCores = cores;
   currentScheme = scheme;
+  jobsArray = malloc( cores * (sizeof(job_t)));
+  for (int i =0; i<cores; i++)
+  {
+    jobsArray[i] = NULL;
+  }
+
   switch(scheme)
   {
     case FCFS:
@@ -122,8 +135,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
   @return -1 if no scheduling changes should be made.
 
  */
-double totalWaitTime = 0;
-double totalResponseTime = 0;
+
 
 /*keep an array of size 1. this array will hold a pointer to the current job
   being run on core 0; Every time a job finishes, pop the front of the queue to
@@ -142,7 +154,28 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       newJob->runTime=running_time;
       newJob->priority=priority;
 
+      if(priqueue_empty(&queue) && jobsArray[0] == NULL)
+      {
+        jobsArray[0] = newJob;
+        newJob -> currentStatus = 0;
+        return 0;
+      }
+      else if (priqueue_empty(&queue) && jobsArray[0] != NULL)
+      {
+        priqueue_offer(&queue, newJob);
+        newJob->currentStatus = -1;
+        return -1;
+      }
+      else
+      {
+        priqueue_offer(&queue, newJob);
+        newJob->currentStatus = -1;
+        return -1;
+      }
 
+
+
+      /*
       if(priqueue_not_empty(&queue) == 0)
       {
         sjfCounter=0;
@@ -160,7 +193,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         newJob -> currentStatus = 0;
         return 0;
       }
-
+*/
 
   return -1;
 }
@@ -180,16 +213,33 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   @return job_number of the job that should be scheduled to run on core core_id
   @return -1 if core should remain idle.
  */
-
-
-double numJobsFinished = 0;
-double totalTurnAroundTime = 0;
-
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
       numJobsFinished++;
+
+      if(priqueue_empty(&queue))
+      {
+        job_t* lastJob = jobsArray[0];
+        free(lastJob);
+        jobsArray[0] = NULL;
+        return -1;
+      }
+      else if(priqueue_not_empty(&queue))
+      {
+        job_t* lastJob = jobsArray[0];
+        free(lastJob);
+        job_t* nextJob = (job_t*)priqueue_poll(&queue);
+        jobsArray[0] = nextJob;
+        return nextJob->jobid;
+      }
+      else
+      {
+        return -1;
+      }
+
     //  if(currentScheme==FCFS)
     //  {
+    /*
         int nextJobNum;
 
         int lastTurnAroundTime = time - ((job_t*)priqueue_peek(&queue))->arrivalTime;
@@ -215,7 +265,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         }
       //}
       return -1;
-
+*/
 }
 
 
@@ -287,6 +337,7 @@ float scheduler_average_response_time()
 void scheduler_clean_up()
 {
   priqueue_destroy(&queue);
+  free(jobsArray);
 }
 
 
