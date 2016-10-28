@@ -173,17 +173,22 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
           newJob->currentStatus = -1;
           return -1;
         }
-        else
-        {
-          priqueue_offer(&queue, newJob);
-          newJob->currentStatus = -1;
-          return -1;
-        }
+        return -1;
+
 
       }
       else // preemptive algorithm was selected, different conditions
       {
-        return -1;
+        if(priqueue_empty(&queue) && jobsArray[0] == NULL)
+        {
+          jobsArray[0] = newJob;
+          newJob->currentStatus = 0;
+          return 0;
+        }
+        else if (priqueue_empty(&queue) && jobsArray[0] != NULL)
+        {
+
+        }
       }
 
   return -1;

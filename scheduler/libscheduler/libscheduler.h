@@ -32,6 +32,7 @@ typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;
 scheme_t currentScheme;
 int numCores;
 priqueue_t queue;
+
 job_t** jobsArray;
 int preemptFlag;
 
