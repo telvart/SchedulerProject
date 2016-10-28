@@ -24,6 +24,7 @@ typedef struct _priqueue_t
   comparer cmp;
 } priqueue_t;
 
+int priqueue_not_empty(priqueue_t* q);
 
 void   priqueue_init     (priqueue_t *q, comparer cmp);
 

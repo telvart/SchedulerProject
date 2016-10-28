@@ -190,7 +190,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 
         int lastTurnAroundTime = time - ((job_t*)priqueue_peek(&queue))->arrivalTime;
         totalTurnAroundTime += lastTurnAroundTime;
-        
+
         job_t* myJobt=priqueue_poll(&queue);
         free(myJobt);
 
@@ -211,6 +211,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         }
 
       }
+      return -1;
 
 }
 
