@@ -24,7 +24,7 @@ typedef struct _job_t
   int jobid;
   int priority;
   int arrivalTime;
-  int runtimeLeft;
+  int runTime;
   int currentStatus; // -1 for waiting, 0 for running
   int waitingTime;
   int turnaroundTime;

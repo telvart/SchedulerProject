@@ -18,13 +18,13 @@ int   fcfsCompare(const void* a, const void* b)
   //return b1->arrivalTime - a1->arrivalTime;
   return a1->arrivalTime - b1->arrivalTime;
 }
-
+int sjfCounter = 0;
 int   sjfCompare (const void* a, const void* b)
 {
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
 
-  return a1->runtimeLeft - b1->runtimeLeft;
+  return a1->runTime - b1->runTime;
 }
 
 int   psjfCompare(const void* a, const void* b)
@@ -32,7 +32,7 @@ int   psjfCompare(const void* a, const void* b)
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
 
-  return a1->runtimeLeft - b1->runtimeLeft;
+  return a1->runTime - b1->runTime;
 
 }
 
@@ -125,39 +125,43 @@ void scheduler_start_up(int cores, scheme_t scheme)
 double totalWaitTime = 0;
 double totalResponseTime = 0;
 
+/*keep an array of size 1. this array will hold a pointer to the current job
+  being run on core 0; Every time a job finishes, pop the front of the queue to
+  the array. the new job being run is going to be what was popped into the array of size 1;
+  this will make things alot easier. The queue is just there to store the list of jobs.
+if current job gets preempted, reinsert the job from the array into the queue, this will
+preserve the order, and re inserting into the queue will always keep it in order
+*/
+
+//TODO: IMPLEMENT JAMIE'S ARRAY SOLUTION
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
       job_t* newJob = malloc(sizeof(newJob));
       newJob->jobid=job_number;
       newJob->arrivalTime=time;
-      newJob->runtimeLeft=running_time;
+      newJob->runTime=running_time;
       newJob->priority=priority;
 
-      if(currentScheme==FCFS)
+
+      if(priqueue_not_empty(&queue) == 0)
       {
-        priqueue_offer(&queue,newJob);
-
-        if( ((job_t*)priqueue_at(&queue,0))->jobid != job_number)
-        {
-
-          newJob -> currentStatus = -1;
-          return -1;
-        }
-        else
-        {
-          newJob -> currentStatus = 0;
-          return 0;
-        }
-        /*
-        if(priqueue_size(&queue) ==1)
-        {
-          return 0;
-        }
-        else
-        {
-          return -1;
-        }*/
+        sjfCounter=0;
       }
+
+      priqueue_offer(&queue,newJob);
+      if( ((job_t*)priqueue_at(&queue,0))->jobid != job_number)
+      {
+
+        newJob -> currentStatus = -1;
+        return -1;
+      }
+      else
+      {
+        newJob -> currentStatus = 0;
+        return 0;
+      }
+
+
   return -1;
 }
 
@@ -184,8 +188,8 @@ double totalTurnAroundTime = 0;
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
       numJobsFinished++;
-      if(currentScheme==FCFS)
-      {
+    //  if(currentScheme==FCFS)
+    //  {
         int nextJobNum;
 
         int lastTurnAroundTime = time - ((job_t*)priqueue_peek(&queue))->arrivalTime;
@@ -209,8 +213,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         {
           return -1;
         }
-
-      }
+      //}
       return -1;
 
 }
@@ -306,8 +309,9 @@ void scheduler_show_queue()
     int curStatus = ((job_t*)priqueue_at(&queue, i))->currentStatus;
     int curPrior = ((job_t*)priqueue_at(&queue, i))->priority;
     int arriv = ((job_t*)priqueue_at(&queue, i))->arrivalTime;
+    int currunTime = ((job_t*)priqueue_at(&queue, i))->runTime;
     //printf(" ID: %d STAT: %d PRI: %d Ariv: %d, ",
      //curid, curStatus, curPrior, arriv);
-     printf(" %d(%d)" , curid, curStatus);
+     printf(" %d(%d) runTime: %d, " , curid, curStatus, currunTime);
   }
 }
