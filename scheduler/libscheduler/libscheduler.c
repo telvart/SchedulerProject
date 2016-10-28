@@ -94,18 +94,23 @@ void scheduler_start_up(int cores, scheme_t scheme)
   {
     case FCFS:
       priqueue_init(&queue, fcfsCompare);
+      preemptFlag=0;
       break;
     case SJF:
       priqueue_init(&queue, sjfCompare);
+      preemptFlag=0;
       break;
     case PSJF:
       priqueue_init(&queue, psjfCompare);
+      preemptFlag=1;
       break;
     case PRI:
       priqueue_init(&queue, priorityCompare);
+      preemptFlag=0;
       break;
     case PPRI:
       priqueue_init(&queue, ppriCompare);
+      preemptFlag=1;
       break;
     case RR:
       priqueue_init(&queue, roundrobinCompare);
@@ -137,8 +142,8 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 
 
-/*keep an array of size 1. this array will hold a pointer to the current job
-  being run on core 0; Every time a job finishes, pop the front of the queue to
+/*keep an array of size[numCores]. this array will hold a pointer to the current job
+  being run on core i; Every time a job finishes, pop the front of the queue to
   the array. the new job being run is going to be what was popped into the array of size 1;
   this will make things alot easier. The queue is just there to store the list of jobs.
 if current job gets preempted, reinsert the job from the array into the queue, this will
@@ -154,46 +159,32 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       newJob->runTime=running_time;
       newJob->priority=priority;
 
-      if(priqueue_empty(&queue) && jobsArray[0] == NULL)
+      if(!preemptFlag)
       {
-        jobsArray[0] = newJob;
-        newJob -> currentStatus = 0;
-        return 0;
+        if(priqueue_empty(&queue) && jobsArray[0] == NULL)
+        {
+          jobsArray[0] = newJob;
+          newJob -> currentStatus = 0;
+          return 0;
+        }
+        else if (priqueue_empty(&queue) && jobsArray[0] != NULL)
+        {
+          priqueue_offer(&queue, newJob);
+          newJob->currentStatus = -1;
+          return -1;
+        }
+        else
+        {
+          priqueue_offer(&queue, newJob);
+          newJob->currentStatus = -1;
+          return -1;
+        }
+
       }
-      else if (priqueue_empty(&queue) && jobsArray[0] != NULL)
+      else // preemptive algorithm was selected, different conditions
       {
-        priqueue_offer(&queue, newJob);
-        newJob->currentStatus = -1;
         return -1;
       }
-      else
-      {
-        priqueue_offer(&queue, newJob);
-        newJob->currentStatus = -1;
-        return -1;
-      }
-
-
-
-      /*
-      if(priqueue_not_empty(&queue) == 0)
-      {
-        sjfCounter=0;
-      }
-
-      priqueue_offer(&queue,newJob);
-      if( ((job_t*)priqueue_at(&queue,0))->jobid != job_number)
-      {
-
-        newJob -> currentStatus = -1;
-        return -1;
-      }
-      else
-      {
-        newJob -> currentStatus = 0;
-        return 0;
-      }
-*/
 
   return -1;
 }
@@ -217,25 +208,39 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 {
       numJobsFinished++;
 
-      if(priqueue_empty(&queue))
+      if(!preemptFlag)
       {
-        job_t* lastJob = jobsArray[0];
-        free(lastJob);
-        jobsArray[0] = NULL;
-        return -1;
-      }
-      else if(priqueue_not_empty(&queue))
-      {
-        job_t* lastJob = jobsArray[0];
-        free(lastJob);
-        job_t* nextJob = (job_t*)priqueue_poll(&queue);
-        jobsArray[0] = nextJob;
-        return nextJob->jobid;
+        if(priqueue_empty(&queue))
+        {
+
+          job_t* lastJob = jobsArray[0];
+          totalTurnAroundTime += time - lastJob->arrivalTime;
+          free(lastJob);
+          jobsArray[0] = NULL;
+          return -1;
+
+        }
+        else
+        {
+
+          job_t* lastJob = jobsArray[0];
+          totalTurnAroundTime += time - lastJob->arrivalTime;
+          free(lastJob);
+          job_t* nextJob = (job_t*)priqueue_poll(&queue);
+          jobsArray[0] = nextJob;
+          totalWaitTime+= time - nextJob->arrivalTime;
+          totalResponseTime+= time - nextJob->arrivalTime;
+
+          return nextJob->jobid;
+
+        }
+
       }
       else
       {
         return -1;
       }
+
 
     //  if(currentScheme==FCFS)
     //  {
