@@ -11,13 +11,13 @@
 
   You may need to define some global variables or a struct to store your job queue elements.
 */
-typedef struct _job_t
+typedef struct job_t
 {
   int jobid;
   int priority;
   int arrivalTime;
   int runTime;
-
+//  int beenScheduled;
   int waitTime;
   int lastTimeScheduled;
 
