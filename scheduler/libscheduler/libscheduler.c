@@ -32,6 +32,10 @@ int   psjfCompare(const void* a, const void* b)
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
 
+  if(a1->runTime == b1->runTime)
+  {
+    return a1->arrivalTime - b1->arrivalTime;
+  }
   return a1->runTime - b1->runTime;
 
 }

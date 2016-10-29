@@ -17,7 +17,7 @@ typedef struct job_t
   int priority;
   int arrivalTime;
   int runTime;
-//  int beenScheduled;
+  //int beenScheduled;
   int waitTime;
   int lastTimeScheduled;
 
