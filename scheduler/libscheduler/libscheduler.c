@@ -167,7 +167,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       newJob->waitTime = 0;
       if(jobsArray[0] != NULL)
       {
-        jobsArray[0] -> runTime = time - jobsArray[0]->arrivalTime;
+        jobsArray[0] -> runTime = time - jobsArray[0]->lastTimeScheduled;
       }
     //  newJob->beenScheduled=0;
 
@@ -280,6 +280,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
           if(jobsArray[0] == NULL)
           {
             jobsArray[0] = newJob;
+            newJob -> lastTimeScheduled = time;
             return 0;
           }
           else if(jobsArray[0] != NULL)
@@ -287,6 +288,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             if(newJob->runTime < jobsArray[0]->runTime || newJob->runTime == jobsArray[0]->runTime)
             {
               priqueue_offer(&queue, jobsArray[0]);
+              newJob->lastTimeScheduled = time;
               jobsArray[0] = newJob;
               return 0;
             }
@@ -430,6 +432,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             free(lastJob);
 
             job_t* nextJob = (job_t*)priqueue_poll(&queue);
+            nextJob->lastTimeScheduled = time;
             jobsArray[0] = nextJob;
 
             totalWaitTime+= time - nextJob->arrivalTime;
