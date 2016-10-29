@@ -186,24 +186,33 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       }
       else // preemptive algorithm was selected, different conditions
       //TODO: PROBLEM ADDING BACK INTO QUEUE
-      //HAS TO DO WITH COMPARISON 
+      //HAS TO DO WITH COMPARISON
       {
         if (currentScheme == PPRI)
-        {
-          if (priqueue_empty(&queue) && jobsArray[0] == NULL)
+        {//empty queue and no assigned jobs
+          if (priqueue_empty(&queue) && jobsArray[0] == NULL)//easy case
           {
             jobsArray[0] = newJob;
             return 0;
-          }
-
+          }//empty queue and job is running
           else if(priqueue_empty(&queue) && jobsArray[0] != NULL)
           {
-            if(newJob -> priority < currentJob->priority)
+            job_t* curJob = jobsArray[0];
+
+            //we need to check if the priorities are the same and if so, sort
+            //by arrival time
+            if(curJob->priority == newJob->priority)
             {
-              job_t* preemptedJob = jobsArray[0];
-              preemptedJob -> runTime = time - preemptedJob->arrivalTime;
-              priqueue_offer(&queue, preemptedJob);
-              jobsArray[0] = newJob;
+              //cant priqueue insert front because we need to check if the front
+              //is the same priority and insert behind it
+              //priqueue_insert_front(&queue, newJob);
+              priqueue_offer(&queue,newJob);
+              return -1;
+            }
+            else if(curJob->priority > newJob->priority)
+            {
+              priqueue_insert_front(&queue, curJob);
+              curJob = newJob;
               return 0;
             }
             else
@@ -211,32 +220,115 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
               priqueue_offer(&queue, newJob);
               return -1;
             }
-          }
 
-          else if(priqueue_not_empty(&queue))
+          }//nonEmpty queue and job is running
+          else if(priqueue_not_empty(&queue) && jobsArray[0] !=NULL)
           {
-            if(newJob -> priority < currentJob -> priority)
+            //here we need to preempt
+            if (jobsArray[0] -> priority == newJob->priority)
             {
-              jobsArray[0] -> runTime = time - jobsArray[0]->arrivalTime;
-              priqueue_offer(&queue, jobsArray[0]);
+              if(jobsArray[0] ->arrivalTime <= newJob->arrivalTime)
+              {
+                priqueue_insert_front(&queue,newJob);
+                return -1;
+              }
+              else//new job belongs in job array
+              {
+                job_t* temp = jobsArray[0];
+                jobsArray[0]=newJob;
+                priqueue_insert_front(&queue, temp);//&temp instead?
+                return 0;
+              }
+              //priqueue_insert_front(&queue, newJob);
+              //return -1;
+            }
+            else if (jobsArray[0]->priority > newJob -> priority)
+            {
 
+              priqueue_insert_front(&queue, jobsArray[0]);
               jobsArray[0] = newJob;
               return 0;
             }
-
             else
             {
               priqueue_offer(&queue, newJob);
               return -1;
             }
+
+
           }
+
         }
         else if(currentScheme == PSJF)
         {
 
         }
-      }
 
+
+
+        // if (priqueue_empty(&queue) && jobsArray[0] == NULL)
+        // {
+        //   jobsArray[0] = newJob;
+        //   return 0;
+        // }
+        //
+        // else if(priqueue_empty(&queue) && jobsArray[0] != NULL)
+        // {
+        //   if(newJob -> priority < currentJob->priority)
+        //   {
+        //     job_t* preemptedJob = jobsArray[0];
+        //     preemptedJob -> runTime = time - preemptedJob->arrivalTime;
+        //     priqueue_offer(&queue, preemptedJob);
+        //     jobsArray[0] = newJob;
+        //     return 0;
+        //   }
+        //   else
+        //   {
+        //     priqueue_offer(&queue, newJob);
+        //     return -1;
+        //   }    if (priqueue_empty(&queue) && jobsArray[0] == NULL)
+        // {
+        //   jobsArray[0] = newJob;
+        //   return 0;
+        // }
+        //
+        // else if(priqueue_empty(&queue) && jobsArray[0] != NULL)
+        // {
+        //   if(newJob -> priority < currentJob->priority)
+        //   {
+        //     job_t* preemptedJob = jobsArray[0];
+        //     preemptedJob -> runTime = time - preemptedJob->arrivalTime;
+        //     priqueue_offer(&queue, preemptedJob);
+        //     jobsArray[0] = newJob;
+        //     return 0;
+        //   }
+        //   else
+        //   {
+        //     priqueue_offer(&queue, newJob);
+        //     return -1;
+        //   }
+        // }
+        //
+        // else if(priqueue_not_empty(&queue) && jobsArray[0] != NULL)
+        // {
+        //   if(newJob -> priority < currentJob -> priority)
+        //   {
+        //     jobsArray[0] -> runTime = time - jobsArray[0]->arrivalTime;
+        //     priqueue_offer(&queue, jobsArray[0]);
+        //
+        //     jobsArray[0] = newJob;
+        //     return 0;
+        //   }
+        //
+        //   else
+        //   {
+        //     priqueue_offer(&queue, newJob);
+        //     return -1;
+        //   }
+        // }
+    //  }
+
+      }
 
   return -1;
 }
@@ -403,7 +495,7 @@ void scheduler_show_queue()
 {
   if(jobsArray[0] != NULL)
   {
-    printf(" Current: %d q: ", jobsArray[0] -> jobid);
+    printf("CORE 0: %d(%d)\n", jobsArray[0] -> jobid, jobsArray[0]->priority);
   }
   else
   {
@@ -418,6 +510,6 @@ void scheduler_show_queue()
     //printf(" ID: %d STAT: %d PRI: %d Ariv: %d, ",
      //curid, curStatus, curPrior, arriv);
 
-     printf(" %d, " , curid);
+     printf(" %d(%d), " , curid,curPrior);
   }
 }

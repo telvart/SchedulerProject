@@ -227,8 +227,9 @@ int priqueue_remove(priqueue_t *q, void *ptr)
         }
       }
       return numRemoved;
-
 }
+
+
 
 
 /**
@@ -304,3 +305,70 @@ void priqueue_destroy(priqueue_t *q)
       q->first=0;
 
 }
+
+void priqueue_insert_front(priqueue_t* q, void* ptr)
+{
+  node* newJob = malloc(sizeof(node));
+  newJob->content = ptr;
+  // newJob -> next = q->first;
+  // q->first = newJob;
+
+  if (q->size == 0)
+  {
+    q->first =newJob;
+    newJob -> next =0;
+  }
+  else
+  {
+    newJob->next = q->first;
+    q->first = newJob;
+  }
+  q->size++;
+}
+
+/*
+void priqueue_insert_after(priqueue_t *q, void* newJob, int index)
+{
+  node* traverse = q->first;
+  for(int i=0;i<index;i++)
+  {
+    traverse = traverse->next;
+  }
+  node* holder = traverse->next;
+  node inserter = malloc(sizeof(node));
+  inserter->content=newJob;
+  traverse->next = inserter;
+  inserter->next = holder;
+}
+
+
+int priqueue_index_by_priority(priqueue_t *q, int priority)
+{
+  node*traverse = q->first;
+  int count =0;
+  if(q->first==NULL)//preventing segfaults
+  {
+    return -1;
+  }
+  if(q->first->next==NULL)
+  {
+    return -1;
+  }
+  //case where the front of the queue is what were looking for;
+  // if((q->first->priority == priority)&& (q->first->next->priority > priority))
+  // {
+  //   return count;
+  // }
+  while(traverse->next !=NULL)
+  {
+    if((traverse->content->priority == priority) && (q->first->next->priority >priority))
+    {
+      return count;
+    }
+    else
+    {
+      traverse=traverse->next;
+      count++;
+    }
+  }
+  return -1;*/
