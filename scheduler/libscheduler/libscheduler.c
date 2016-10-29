@@ -417,6 +417,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           {
             job_t* lastJob = jobsArray[0];
             totalWaitTime += lastJob->waitTime;
+            totalTurnAroundTime += time - lastJob->arrivalTime;
 
             free(lastJob);
             jobsArray[0] = NULL;
@@ -426,7 +427,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           {
             job_t* lastJob = jobsArray[0];
             totalWaitTime+=lastJob->waitTime;
-
+            totalTurnAroundTime += time - lastJob->arrivalTime;
             free(lastJob);
 
             job_t* nextJob = (job_t*)priqueue_poll(&queue);
