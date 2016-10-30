@@ -305,6 +305,27 @@ void priqueue_destroy(priqueue_t *q)
       q->first=0;
 
 }
+void priqueue_insert_back(priqueue_t* q, void* ptr)
+{
+  node* newJob = malloc(sizeof(node));
+  newJob->content = ptr;
+  if( q->size == 0)
+  {
+    q->first = newJob;
+    newJob->next=0;
+  }
+  else
+  {
+    node* traverse = q->first;
+    while(traverse->next != 0)
+    {
+      traverse=traverse->next;
+    }
+    traverse->next = newJob;
+    newJob->next = 0;
+  }
+  q->size++;
+}
 
 void priqueue_insert_front(priqueue_t* q, void* ptr)
 {
@@ -345,10 +366,7 @@ void priqueue_insert_after(priqueue_t *q, void* newJob, int index)
 int priqueue_index_by_priority(priqueue_t *q, int priority)
 {
   node*traverse = q->first;
-  int count =0;
-  if(q->first==NULL)//preventing segfaults
-  {
-    return -1;
+  int count =0;  l
   }
   if(q->first->next==NULL)
   {
