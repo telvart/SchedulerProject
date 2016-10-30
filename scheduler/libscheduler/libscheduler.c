@@ -57,9 +57,6 @@ int   priorityCompare(const void* a, const void* b)
 
 int   roundrobinCompare(const void* a, const void* b)
 {
-  job_t* a1 = (job_t*)a;
-  job_t* b1 = (job_t*)b;
-
   return -1;
 }
 
@@ -184,7 +181,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         }
         else
         {
-          priqueue_insert_back(&queue, newJob);
+          priqueue_offer(&queue, newJob);
+          newJob->lastPutinQueue = time;
           return -1;
         }
       }
@@ -408,7 +406,8 @@ int scheduler_quantum_expired(int core_id, int time)
   }
   else
   {
-    priqueue_insert_back(&queue, jobsArray[0]);
+    priqueue_offer(&queue, jobsArray[0]);
+    jobsArray[0]->lastPutinQueue = time;
     jobsArray[0]=priqueue_poll(&queue);
     return jobsArray[0]->jobid;
   }
@@ -483,7 +482,7 @@ void scheduler_show_queue()
 {
   if(jobsArray[0] != NULL)
   {
-    printf("CORE 0: %d\n", jobsArray[0] -> jobid);
+    printf("Currently Running: %d\n         ", jobsArray[0] -> jobid);
   }
   else
   {

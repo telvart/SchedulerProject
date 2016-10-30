@@ -34,7 +34,8 @@ void priqueue_init(priqueue_t *q, comparer new_cmp)
 
   @param q a pointer to an instance of the priqueue_t data structure
   @param ptr a pointer to the data to be inserted into the priority queue
-  @return The zero-based index where ptr is stored in the priority queue, where 0 indicates that ptr was stored at the front of the priority queue.
+  @return The zero-based index where ptr is stored in the priorits quantum expire. Core 0 is now running job 12.
+  Queue: Currently Running: 12ity queue, where 0 indicates that ptr was stored at the front of the priority queue.
  */
 int priqueue_not_empty(priqueue_t* q)
 {
