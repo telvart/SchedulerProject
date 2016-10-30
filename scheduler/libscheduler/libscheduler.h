@@ -22,6 +22,7 @@ typedef struct job_t
   int responseTime;
   int lastTimeScheduled;
   int firstTimeScheduled;
+  int lastPutinQueue;
 
 
   //other control members will be added as necessary.

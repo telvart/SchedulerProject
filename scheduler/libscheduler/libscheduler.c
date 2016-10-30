@@ -168,6 +168,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       newJob->priority=priority;
       newJob->waitTime = 0;
 
+      //update runtime
       if(jobsArray[0] != NULL)
       {
         jobsArray[0] -> runTime -= time - jobsArray[0]->lastTimeScheduled;
@@ -186,24 +187,19 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
           return -1;
         }
       }
+
       if(!preemptFlag)
       {
-        if(priqueue_empty(&queue) && jobsArray[0] == NULL)
+        if(jobsArray[0] == NULL)
         {
           jobsArray[0] = newJob;
           return 0;
         }
-        else if (priqueue_empty(&queue) && jobsArray[0] != NULL)
+        else if(jobsArray[0] != NULL)
         {
           priqueue_offer(&queue, newJob);
           return -1;
         }
-        else if (priqueue_not_empty(&queue) && jobsArray != NULL)
-        {
-          priqueue_offer(&queue, newJob);
-          return -1;
-        }
-        return -1;
 
       }
       else // preemptive algorithm was selected, different conditions
