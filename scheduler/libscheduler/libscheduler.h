@@ -19,7 +19,9 @@ typedef struct job_t
   int runTime;
   int beenScheduled;
   int waitTime;
+  int responseTime;
   int lastTimeScheduled;
+  int firstTimeScheduled;
 
 
   //other control members will be added as necessary.

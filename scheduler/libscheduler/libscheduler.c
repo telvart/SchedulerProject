@@ -163,6 +163,7 @@ preserve the order, and re inserting into the queue will always keep it in order
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
       job_t* newJob = malloc(sizeof(job_t));
+      newJob->beenScheduled=0;
       newJob->jobid=job_number;
       newJob->arrivalTime=time;
     //  newJob->lastTimeScheduled = time;
@@ -171,7 +172,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       newJob->waitTime = 0;
       if(jobsArray[0] != NULL)
       {
-        jobsArray[0] -> runTime = time - jobsArray[0]->lastTimeScheduled;
+        jobsArray[0] -> runTime -= time - jobsArray[0]->lastTimeScheduled;
       }
     //  newJob->beenScheduled=0;
 
@@ -284,13 +285,36 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
           if(jobsArray[0] == NULL)
           {
             jobsArray[0] = newJob;
-            newJob -> lastTimeScheduled = time;
+            if(jobsArray[0]->beenScheduled==0)//case where its never been scheduled
+            { //before
+              jobsArray[0] ->waitTime += time-jobsArray[0]->arrivalTime;
+              jobsArray[0] -> lastTimeScheduled = time;
+              jobsArray[0] -> firstTimeScheduled= time;
+              jobsArray[0]->beenScheduled=1;
+            }
+            else//case where its been scheduled before -never runs
+            {
+              jobsArray[0]->waitTime += time-jobsArray[0]->lastTimeScheduled;
+              jobsArray[0] -> lastTimeScheduled=time;
+            }
             return 0;
           }
           else if(jobsArray[0] != NULL)
           {
-            if(newJob->runTime < jobsArray[0]->runTime || newJob->runTime == jobsArray[0]->runTime)
+            if(newJob->runTime < jobsArray[0]->runTime)
             {
+              if(jobsArray[0]->beenScheduled==0)//case where its never been scheduled
+              { //before
+                jobsArray[0] ->waitTime += time - jobsArray[0]->arrivalTime;
+                jobsArray[0] -> lastTimeScheduled = time;
+                jobsArray[0] -> firstTimeScheduled= time;
+                jobsArray[0]->beenScheduled=1;
+              }
+              else//case where its been scheduled before -never runs
+              {
+                jobsArray[0] -> waitTime+= time-jobsArray[0]->lastTimeScheduled;
+                jobsArray[0] -> lastTimeScheduled=time;
+              }
               priqueue_offer(&queue, jobsArray[0]);
               newJob->lastTimeScheduled = time;
               jobsArray[0] = newJob;
@@ -298,6 +322,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             }
             else
             {
+
               priqueue_offer(&queue, newJob);
               return -1;
             }
@@ -423,6 +448,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         {
           if(priqueue_empty(&queue))
           {
+          //  lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
+
             job_t* lastJob = jobsArray[0];
             totalTurnAroundTime += time - lastJob->arrivalTime;
             free(lastJob);
@@ -446,11 +473,13 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           }
 
         }
-        else
+        else//preemption case
         {
-          if(priqueue_empty(&queue))
+          if(priqueue_empty(&queue))//queue is empty, free jobsarray[0]
           {
             job_t* lastJob = jobsArray[0];
+            lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
+            totalResponseTime+=lastJob->responseTime;
             totalWaitTime += lastJob->waitTime;
             totalTurnAroundTime += time - lastJob->arrivalTime;
 
@@ -461,6 +490,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           else
           {
             job_t* lastJob = jobsArray[0];
+            lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
+            totalResponseTime+=lastJob->responseTime;
             totalWaitTime+=lastJob->waitTime;
             totalTurnAroundTime += time - lastJob->arrivalTime;
             free(lastJob);
@@ -469,8 +500,18 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 
             jobsArray[0] = nextJob;
 
-            nextJob->lastTimeScheduled = time;
+            jobsArray[0]->lastTimeScheduled = time;
 
+            if(jobsArray[0]->beenScheduled==0)
+            {
+              jobsArray[0]->waitTime+=time-jobsArray[0]->arrivalTime;
+              jobsArray[0]->firstTimeScheduled=time;
+              jobsArray[0]->beenScheduled=1;
+            }
+            else
+            {
+              jobsArray[0]->waitTime+=time-jobsArray[0]->lastTimeScheduled;
+            }
             return nextJob->jobid;
           }
         }
@@ -488,7 +529,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   @param core_id the zero-based index of the core where the quantum has expired.
   @param time the current time of the simulator.
   @return job_number of the job that should be scheduled on core cord_id
-  @return -1 if core should remain idle
+  @return -1 if core should remain beenScidle
  */
 int scheduler_quantum_expired(int core_id, int time)
 {
