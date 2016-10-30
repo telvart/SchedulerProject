@@ -24,9 +24,10 @@ typedef struct _priqueue_t
   comparer cmp;
 } priqueue_t;
 
-int priqueue_not_empty(priqueue_t* q);
-int priqueue_empty(priqueue_t* q);
-void priqueue_insert_front(priqueue_t* q, void* ptr);
+int   priqueue_not_empty   (priqueue_t* q);
+int   priqueue_empty       (priqueue_t* q);
+void  priqueue_insert_front(priqueue_t* q, void* ptr);
+void  priqueue_insert_back (priqueue_t* q, void* ptr);
 
 void   priqueue_init     (priqueue_t *q, comparer cmp);
 

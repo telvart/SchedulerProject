@@ -15,7 +15,7 @@ int   fcfsCompare(const void* a, const void* b)
 {
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
-  //return b1->arrivalTime - a1->arrivalTime;
+
   return a1->arrivalTime - b1->arrivalTime;
 }
 
@@ -24,6 +24,10 @@ int   sjfCompare (const void* a, const void* b)
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
 
+  if(a1->runTime == b1->runTime)
+  {
+    return a1->arrivalTime - b1->arrivalTime;
+  }
   return a1->runTime - b1->runTime;
 }
 
@@ -44,6 +48,10 @@ int   priorityCompare(const void* a, const void* b)
 {
   job_t* a1 = (job_t*)a;
   job_t* b1 = (job_t*)b;
+  if(a1->priority == b1->priority)
+  {
+    return a1->arrivalTime - b1->arrivalTime;
+  }
   return a1->priority - b1->priority;
 }
 
@@ -101,6 +109,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
 
   switch(scheme)
   {
+
     case FCFS:
       priqueue_init(&queue, fcfsCompare);
       preemptFlag=0;
@@ -149,34 +158,20 @@ void scheduler_start_up(int cores, scheme_t scheme)
   @return -1 if no scheduling changes should be made.
 
  */
-
-
-/*keep an array of size[numCores]. this array will hold a pointer to the current job
-  being run on core i; Every time a job finishes, pop the front of the queue to
-  the array. the new job being run is going to be what was popped into the array of size 1;
-  this will make things alot easier. The queue is just there to store the list of jobs.
-if current job gets preempted, reinsert the job from the array into the queue, this will
-preserve the order, and re inserting into the queue will always keep it in order
-*/
-
-//TODO: IMPLEMENT JAMIE'S ARRAY SOLUTION
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
       job_t* newJob = malloc(sizeof(job_t));
       newJob->beenScheduled=0;
       newJob->jobid=job_number;
       newJob->arrivalTime=time;
-    //  newJob->lastTimeScheduled = time;
       newJob->runTime=running_time;
       newJob->priority=priority;
       newJob->waitTime = 0;
+
       if(jobsArray[0] != NULL)
       {
         jobsArray[0] -> runTime -= time - jobsArray[0]->lastTimeScheduled;
       }
-    //  newJob->beenScheduled=0;
-
-      job_t* currentJob = jobsArray[0];
 
       if(currentScheme==RR)
       {
@@ -213,90 +208,47 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       }
       else // preemptive algorithm was selected, different conditions
       {
-        if (currentScheme == PPRI)// || currentScheme == PSJF)
-        {//empty queue and no assigned jobs
-          if (priqueue_empty(&queue) && jobsArray[0] == NULL)//easy case
+        if (currentScheme == PPRI)
+        {
+          if(jobsArray[0] == NULL)
           {
+            newJob-> lastTimeScheduled=time;
+            newJob-> firstTimeScheduled=time;
+            newJob-> beenScheduled=1;
+            newJob-> waitTime = 0;
+
             jobsArray[0] = newJob;
-            //  newJob->beenScheduled = 1;
             return 0;
-          }//empty queue and job is running
-          else if(priqueue_empty(&queue) && jobsArray[0] != NULL)
-          {
-            job_t* curJob = jobsArray[0];
-
-            //we need to check if the priorities are the same and if so, sort
-            //by arrival time
-            if(curJob->priority == newJob->priority)
-            {
-              //cant priqueue insert front because we need to check if the front
-              //is the same priority and insert behind it
-              //priqueue_insert_front(&queue, newJob);
-              priqueue_offer(&queue,newJob);
-            //    newJob->beenScheduled = 0;
-              return -1;
-            }
-            else if(curJob->priority > newJob->priority)
-            {
-              priqueue_insert_front(&queue, curJob);
-              curJob = newJob;
-              //  newJob->beenScheduled = 1;
-              return 0;
-            }
-            else
-            {
-              priqueue_offer(&queue, newJob);
-              //  newJob->beenScheduled = 0;
-              return -1;
-            }
-
-          }//nonEmpty queue and job is running
-          else if(priqueue_not_empty(&queue) && jobsArray[0] !=NULL)
-          {
-            //here we need to preempt
-            if (jobsArray[0] -> priority == newJob->priority)
-            {
-              if(jobsArray[0] ->arrivalTime <= newJob->arrivalTime)
-              {
-                priqueue_insert_front(&queue,newJob);
-                return -1;
-              }
-              else//new job belongs in job array
-              {
-                job_t* temp = jobsArray[0];
-                jobsArray[0]=newJob;
-                priqueue_insert_front(&queue, temp);//&temp instead?
-                return 0;
-              }
-              //priqueue_insert_front(&queue, newJob);
-              //return -1;
-            }
-            else if (jobsArray[0]->priority > newJob -> priority)
-            {
-
-              priqueue_insert_front(&queue, jobsArray[0]);
-              jobsArray[0] = newJob;
-              return 0;
-            }
-            else
-            {
-              priqueue_offer(&queue, newJob);
-              return -1;
-            }
-
 
           }
-
+          else if(jobsArray[0] != NULL)
+          {
+            if(newJob->priority < jobsArray[0] -> priority)
+            {
+              priqueue_offer(&queue, jobsArray[0]);
+              jobsArray[0] = newJob;
+              newJob-> lastTimeScheduled=time;
+              newJob-> firstTimeScheduled=time;
+              newJob-> beenScheduled=1;
+              return 0;
+            }
+            else
+            {
+              priqueue_offer(&queue, newJob);
+              return -1;
+            }
+          }
         }
+
         else if(currentScheme == PSJF)
         {
           if(jobsArray[0] == NULL)
           {
             jobsArray[0] = newJob;
-              jobsArray[0] ->waitTime += time-jobsArray[0]->arrivalTime;
-              jobsArray[0] -> lastTimeScheduled = time;
-              jobsArray[0] -> firstTimeScheduled= time;
-              jobsArray[0]->beenScheduled=1;
+              newJob-> waitTime += time-jobsArray[0]->arrivalTime;
+              newJob-> lastTimeScheduled = time;
+              newJob-> firstTimeScheduled= time;
+              newJob-> beenScheduled=1;
 
             //  jobsArray[0]->waitTime += time-jobsArray[0]->lastTimeScheduled;
 
@@ -308,10 +260,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             {
               priqueue_offer(&queue, jobsArray[0]);
               jobsArray[0] = newJob;
-              jobsArray[0] ->waitTime += time - jobsArray[0]->arrivalTime;
-              jobsArray[0] -> lastTimeScheduled = time;
-              jobsArray[0] -> firstTimeScheduled= time;
-              jobsArray[0]->beenScheduled=1;
+              newJob-> waitTime += time - jobsArray[0]->arrivalTime;
+              newJob-> lastTimeScheduled = time;
+              newJob-> firstTimeScheduled= time;
+              newJob-> beenScheduled=1;
 
                 //jobsArray[0] -> waitTime+= time-jobsArray[0]->lastTimeScheduled;
               return 0;
@@ -322,20 +274,15 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
               return -1;
             }
           }
-          else if(priqueue_not_empty(&queue))
-          {
-
-            priqueue_offer(&queue, newJob);
-            return -1;
-          }
-
         }
-
       }
+
+
+
+
 
   return -1;
 }
-
 
 /**
   Called when a job has completed execution.
