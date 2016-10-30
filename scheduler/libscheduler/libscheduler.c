@@ -230,6 +230,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             }
             else
             {
+              newJob-> lastPutinQueue = time;
               priqueue_offer(&queue, newJob);
               return -1;
             }
@@ -302,10 +303,10 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         {
           if(priqueue_empty(&queue))
           {
-          //  lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
 
             job_t* lastJob = jobsArray[0];
             totalTurnAroundTime += time - lastJob->arrivalTime;
+
             free(lastJob);
             jobsArray[0] = NULL;
             return -1;
@@ -317,7 +318,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             free(lastJob);
 
             job_t* nextJob = (job_t*)priqueue_poll(&queue);
-            nextJob->lastTimeScheduled = time;
+
             jobsArray[0] = nextJob;
 
             totalWaitTime+= time - nextJob->arrivalTime;
@@ -332,9 +333,12 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           if(priqueue_empty(&queue))//queue is empty, free jobsarray[0]
           {
             job_t* lastJob = jobsArray[0];
-            lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
-            totalResponseTime+=lastJob->responseTime;
-            totalWaitTime += lastJob->waitTime;
+          //  lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
+            //totalResponseTime+=lastJob->responseTime;
+            //totalWaitTime += lastJob->waitTime;
+
+            totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
+
             totalTurnAroundTime += time - lastJob->arrivalTime;
 
             free(lastJob);
@@ -344,10 +348,12 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           else
           {
             job_t* lastJob = jobsArray[0];
-            lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
-            totalResponseTime+=lastJob->responseTime;
+
+            //lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
+            totalResponseTime+= lastJob ->firstTimeScheduled - lastJob->arrivalTime;
             totalWaitTime+=lastJob->waitTime;
             totalTurnAroundTime += time - lastJob->arrivalTime;
+
             free(lastJob);
 
             job_t* nextJob = (job_t*)priqueue_poll(&queue);
@@ -355,17 +361,12 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             jobsArray[0] = nextJob;
 
             jobsArray[0]->lastTimeScheduled = time;
+            if(!nextJob->beenScheduled)
+            {
+              nextJob->firstTimeScheduled = time;
+              nextJob->beenScheduled = 1;
+            }
 
-            if(jobsArray[0]->beenScheduled==0)
-            {
-              jobsArray[0]->waitTime+=time-jobsArray[0]->arrivalTime;
-              jobsArray[0]->firstTimeScheduled=time;
-              jobsArray[0]->beenScheduled=1;
-            }
-            else
-            {
-              jobsArray[0]->waitTime+=time-jobsArray[0]->lastTimeScheduled;
-            }
             return nextJob->jobid;
           }
         }
