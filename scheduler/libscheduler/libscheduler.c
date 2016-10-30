@@ -259,6 +259,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             if(newJob->runTime < jobsArray[0]->runTime)
             {
               priqueue_offer(&queue, jobsArray[0]);
+              jobsArray[0] -> lastPutinQueue = time;
               jobsArray[0] = newJob;
             //  newJob-> waitTime += time - jobsArray[0]->arrivalTime;
               newJob-> lastTimeScheduled = time;
@@ -270,6 +271,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             }
             else
             {
+              newJob->lastPutinQueue = time;
               priqueue_offer(&queue, newJob);
               return -1;
             }
