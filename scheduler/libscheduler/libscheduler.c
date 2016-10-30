@@ -162,10 +162,10 @@ preserve the order, and re inserting into the queue will always keep it in order
 //TODO: IMPLEMENT JAMIE'S ARRAY SOLUTION
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-      job_t* newJob = malloc(sizeof(newJob));
+      job_t* newJob = malloc(sizeof(job_t));
       newJob->jobid=job_number;
       newJob->arrivalTime=time;
-      newJob->lastTimeScheduled = time;
+    //  newJob->lastTimeScheduled = time;
       newJob->runTime=running_time;
       newJob->priority=priority;
       newJob->waitTime = 0;
