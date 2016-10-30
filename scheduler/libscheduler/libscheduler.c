@@ -161,12 +161,13 @@ void scheduler_start_up(int cores, scheme_t scheme)
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
       job_t* newJob = malloc(sizeof(job_t));
-      newJob->beenScheduled=0;
-      newJob->jobid=job_number;
-      newJob->arrivalTime=time;
-      newJob->runTime=running_time;
-      newJob->priority=priority;
-      newJob->waitTime = 0;
+      newJob-> beenScheduled=0;
+      newJob-> jobid=job_number;
+      newJob-> arrivalTime=time;
+      newJob-> runTime=running_time;
+      newJob-> priority=priority;
+      newJob-> waitTime = 0;
+      newJob-> lastPutinQueue=0;
 
       //update runtime
       if(jobsArray[0] != NULL)
@@ -211,7 +212,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             newJob-> lastTimeScheduled=time;
             newJob-> firstTimeScheduled=time;
             newJob-> beenScheduled=1;
-            newJob-> waitTime = 0;
 
             jobsArray[0] = newJob;
             return 0;
@@ -222,9 +222,12 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             if(newJob->priority < jobsArray[0] -> priority)
             {
               priqueue_offer(&queue, jobsArray[0]);
+              jobsArray[0] -> lastPutinQueue = time;
               jobsArray[0] = newJob;
+
               newJob-> lastTimeScheduled=time;
               newJob-> firstTimeScheduled=time;
+
               newJob-> beenScheduled=1;
               return 0;
             }
@@ -242,7 +245,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
           if(jobsArray[0] == NULL)
           {
             jobsArray[0] = newJob;
-              newJob-> waitTime += time-jobsArray[0]->arrivalTime;
+            //  newJob-> waitTime += time-jobsArray[0]->arrivalTime;
               newJob-> lastTimeScheduled = time;
               newJob-> firstTimeScheduled= time;
               newJob-> beenScheduled=1;
@@ -257,7 +260,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             {
               priqueue_offer(&queue, jobsArray[0]);
               jobsArray[0] = newJob;
-              newJob-> waitTime += time - jobsArray[0]->arrivalTime;
+            //  newJob-> waitTime += time - jobsArray[0]->arrivalTime;
               newJob-> lastTimeScheduled = time;
               newJob-> firstTimeScheduled= time;
               newJob-> beenScheduled=1;
@@ -284,7 +287,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 /**
   Called when a job has completed execution.
 
-  The core_id, job_number and time parameters are provided for convenience. You may be able to calculate the values with your own data structure.
+  The core_id, job_number and time parameters are provided for convenience.
+   You may be able to calculate the values with your own data structure.
   If any job should be scheduled to run on the core free'd up by the
   finished job, return the job_number of the job that should be scheduled to
   run on core core_id.
@@ -336,6 +340,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           //  lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
             //totalResponseTime+=lastJob->responseTime;
             //totalWaitTime += lastJob->waitTime;
+            totalWaitTime += lastJob->waitTime;
 
             totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
 
@@ -351,12 +356,13 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 
             //lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
             totalResponseTime+= lastJob ->firstTimeScheduled - lastJob->arrivalTime;
-            totalWaitTime+=lastJob->waitTime;
             totalTurnAroundTime += time - lastJob->arrivalTime;
+            totalWaitTime += lastJob->waitTime;
 
             free(lastJob);
 
             job_t* nextJob = (job_t*)priqueue_poll(&queue);
+            nextJob -> waitTime += time - nextJob->lastPutinQueue;
 
             jobsArray[0] = nextJob;
 
@@ -475,7 +481,7 @@ void scheduler_show_queue()
 {
   if(jobsArray[0] != NULL)
   {
-    printf("CORE 0: %d(%d)\n", jobsArray[0] -> jobid, jobsArray[0]->runTime);
+    printf("CORE 0: %d\n", jobsArray[0] -> jobid);
   }
   else
   {
@@ -492,7 +498,7 @@ void scheduler_show_queue()
       //printf(" ID: %d STAT: %d PRI: %d Ariv: %d, ",
        //curid, curStatus, curPrior, arriv);
 
-       printf(" %d(%d), " , curid,currunTime);
+       printf(" %d, " , curid);
     }
   }
 
