@@ -109,9 +109,56 @@ void schedule(job_t** array, job_t* newJob, int coreID)
   array[coreID] = newJob;
 }
 
-int preemptNeeded(job_t** array, int coreID, job_t* newJob)
+int preemptNeeded(job_t** array, job_t* newJob, scheme_t scheme)
 {
-  return 1;
+
+  if(scheme == PPRI)
+  {
+    int newPri = newJob->priority;
+    int minPri = array[0]->priority;
+    for(int i = 0; i< numCores; i++)
+    {
+      if(array[i] -> priority < minPri)
+      {
+        minPri = array[i]->priority;
+      }
+    }
+    if(newPri < minPri)
+    {
+      return 1;
+    }
+    return 0;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+int coreToPreempt(job_t** array, scheme_t scheme)
+{
+  if(scheme == PPRI)
+  {
+    int maxPri = array[0]->priority;
+    for(int i=0; i<numCores; i++)
+    {
+      if(array[i] -> priority > maxPri)
+      {
+        maxPri = array[i]->priority;
+      }
+    }
+    for(int i =0; i<numCores; i++)
+    {
+      if(array[i]->priority == maxPri)
+      {
+        return i;
+      }
+    }
+  }
+  else
+  {
+    return -1;
+  }
 }
 
 
@@ -165,7 +212,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
       break;
     case RR:
       priqueue_init(&queue, roundrobinCompare);
-      preemptFlag=1;
+      preemptFlag=0;
       break;
 
   }
@@ -236,7 +283,27 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       }
       else
       {
-
+        if(coresAvailable(jobsArray, numCores))
+        {
+          int nextCore = nextAvailableCore(jobsArray, numCores);
+          schedule(jobsArray, newJob, nextCore);
+          return nextCore;
+        }
+        else
+        {
+          if(preemptNeeded(jobsArray, newJob, currentScheme))
+          {
+            int nextCore = coreToPreempt(jobsArray, currentScheme);
+            priqueue_offer(&queue, jobsArray[nextCore]);
+            schedule(jobsArray, newJob, nextCore);
+            return nextCore;
+          }
+          else
+          {
+            priqueue_offer(&queue, newJob);
+            return -1;
+          }
+        }
       }
 
       // if(currentScheme==RR)
@@ -374,43 +441,35 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         numJobsFinished++;
         job_t* lastJob = jobsArray[core_id];
 
-        if(!preemptFlag)
+        if(priqueue_empty(&queue))
         {
-          if(priqueue_empty(&queue))
-          {
-            jobsArray[core_id]=NULL;
-            totalTurnAroundTime += time - lastJob->arrivalTime;
-            totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
-            totalWaitTime+= lastJob->waitTime;
-            free(lastJob);
-            return -1;
-          }
-          else
-          {
-            job_t* nextJob = priqueue_poll(&queue);
-            jobsArray[core_id] = nextJob;
-            nextJob->lastTimeScheduled = time;
-            nextJob->waitTime += time - nextJob->lastPutinQueue;
-
-
-            if(!nextJob->beenScheduled)
-            {
-              nextJob->firstTimeScheduled = time;
-              nextJob-> beenScheduled = 1;
-            }
-
-
-            totalTurnAroundTime += time - lastJob->arrivalTime;
-            totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
-            totalWaitTime+= lastJob->waitTime;
-
-            free(lastJob);
-            return jobsArray[core_id]->jobid;
-          }
+          jobsArray[core_id]=NULL;
+          totalTurnAroundTime += time - lastJob->arrivalTime;
+          totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
+          totalWaitTime+= lastJob->waitTime;
+          free(lastJob);
+          return -1;
         }
         else
         {
-          return -1;
+          job_t* nextJob = priqueue_poll(&queue);
+          jobsArray[core_id] = nextJob;
+          nextJob->lastTimeScheduled = time;
+          nextJob->waitTime += time - nextJob->lastPutinQueue;
+
+          if(!nextJob->beenScheduled)
+          {
+            nextJob->firstTimeScheduled = time;
+            nextJob-> beenScheduled = 1;
+          }
+
+
+          totalTurnAroundTime += time - lastJob->arrivalTime;
+          totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
+          totalWaitTime+= lastJob->waitTime;
+
+          free(lastJob);
+          return jobsArray[core_id]->jobid;
         }
 
 
@@ -508,7 +567,33 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 int scheduler_quantum_expired(int core_id, int time)
 {
 
+  if(priqueue_empty(&queue))
+  {
+    return jobsArray[core_id]->jobid;
+  }
+  else
+  {
+    job_t* lastJob = jobsArray[core_id];
+    lastJob->lastPutinQueue = time;
+    priqueue_offer(&queue, lastJob);
+    job_t* newJob = priqueue_poll(&queue);
 
+    jobsArray[core_id] = newJob;
+    newJob->waitTime += time - newJob->lastPutinQueue;
+    newJob->lastTimeScheduled=time;
+    if(!newJob->beenScheduled)
+    {
+      newJob->firstTimeScheduled = time;
+      newJob->beenScheduled=1;
+    }
+
+
+    return jobsArray[core_id]->jobid;
+  }
+
+}
+
+/*
   if(priqueue_empty(&queue) && jobsArray[0] == NULL)
   {
     return -1;
@@ -531,7 +616,7 @@ int scheduler_quantum_expired(int core_id, int time)
     return jobsArray[0]->jobid;
   }
 }
-
+*/
 
 /**
   Returns the average waiting time of all jobs scheduled by your scheduler.
