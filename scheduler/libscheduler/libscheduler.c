@@ -79,6 +79,42 @@ double totalResponseTime = 0;
 double numJobsFinished = 0;
 double totalTurnAroundTime = 0;
 
+
+int coresAvailable(job_t** array, int cores)
+{
+  for (int i =0; i < cores; i++)
+  {
+    if (array[i] == NULL)
+    {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int nextAvailableCore(job_t** array, int cores)
+{
+  for(int i =0; i< cores; i++)
+  {
+    if(array[i] == NULL)
+    {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void schedule(job_t** array, job_t* newJob, int coreID)
+{
+  array[coreID] = newJob;
+}
+
+int preemptNeeded(job_t** array, int coreID, job_t* newJob)
+{
+  return 1;
+}
+
+
 /**
   Initalizes the scheduler.
   possible schemes: FCFS = 0, SJF, PSJF, PRI, PPRI, RR
@@ -168,20 +204,28 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       newJob-> lastPutinQueue=0;
 
       //update runtime
-      if(jobsArray[0] != NULL)
+      // if(jobsArray[0] != NULL)
+      // {
+      //   jobsArray[0] -> runTime -= time - jobsArray[0]->lastTimeScheduled;
+      // }
+      for(int i = 0; i< numCores; i++)
       {
-        jobsArray[0] -> runTime -= time - jobsArray[0]->lastTimeScheduled;
+        if(jobsArray[i] != NULL)
+        {
+          jobsArray[i]->runTime -= time - jobsArray[i]->lastTimeScheduled;
+        }
       }
 
-      if(currentScheme==RR)
+      if(!preemptFlag)
       {
-        if (jobsArray[0] == NULL)
+        if(coresAvailable(jobsArray, numCores))
         {
-          jobsArray[0] = newJob;
-          newJob -> lastTimeScheduled = time;
-          newJob -> firstTimeScheduled = time;
-          newJob -> beenScheduled = 1;
-          return 0;
+          int nextCore = nextAvailableCore(jobsArray, numCores);
+          schedule(jobsArray, newJob, nextCore);
+          newJob->firstTimeScheduled = time;
+          newJob-> lastTimeScheduled = time;
+          newJob-> beenScheduled = 1;
+          return nextCore;
         }
         else
         {
@@ -190,96 +234,118 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
           return -1;
         }
       }
-
-      if(!preemptFlag)
+      else
       {
-        if(jobsArray[0] == NULL)
-        {
-          jobsArray[0] = newJob;
-          return 0;
-        }
-        else if(jobsArray[0] != NULL)
-        {
-          priqueue_offer(&queue, newJob);
-          return -1;
-        }
 
       }
-      else // preemptive algorithm was selected, different conditions
-      {
-        if (currentScheme == PPRI)
-        {
-          if(jobsArray[0] == NULL)
-          {
-            newJob-> lastTimeScheduled=time;
-            newJob-> firstTimeScheduled=time;
-            newJob-> beenScheduled=1;
 
-            jobsArray[0] = newJob;
-            return 0;
-
-          }
-          else if(jobsArray[0] != NULL)
-          {
-            if(newJob->priority < jobsArray[0] -> priority)
-            {
-              priqueue_offer(&queue, jobsArray[0]);
-              jobsArray[0] -> lastPutinQueue = time;
-              jobsArray[0] = newJob;
-
-              newJob-> lastTimeScheduled=time;
-              newJob-> firstTimeScheduled=time;
-
-              newJob-> beenScheduled=1;
-              return 0;
-            }
-            else
-            {
-              newJob-> lastPutinQueue = time;
-              priqueue_offer(&queue, newJob);
-              return -1;
-            }
-          }
-        }
-
-        else if(currentScheme == PSJF)
-        {
-          if(jobsArray[0] == NULL)
-          {
-            jobsArray[0] = newJob;
-            //  newJob-> waitTime += time-jobsArray[0]->arrivalTime;
-              newJob-> lastTimeScheduled = time;
-              newJob-> firstTimeScheduled= time;
-              newJob-> beenScheduled=1;
-
-            //  jobsArray[0]->waitTime += time-jobsArray[0]->lastTimeScheduled;
-
-            return 0;
-          }
-          else if(jobsArray[0] != NULL)
-          {
-            if(newJob->runTime < jobsArray[0]->runTime)
-            {
-              priqueue_offer(&queue, jobsArray[0]);
-              jobsArray[0] -> lastPutinQueue = time;
-              jobsArray[0] = newJob;
-            //  newJob-> waitTime += time - jobsArray[0]->arrivalTime;
-              newJob-> lastTimeScheduled = time;
-              newJob-> firstTimeScheduled= time;
-              newJob-> beenScheduled=1;
-
-                //jobsArray[0] -> waitTime+= time-jobsArray[0]->lastTimeScheduled;
-              return 0;
-            }
-            else
-            {
-              newJob->lastPutinQueue = time;
-              priqueue_offer(&queue, newJob);
-              return -1;
-            }
-          }
-        }
-      }
+      // if(currentScheme==RR)
+      // {
+      //   if (jobsArray[0] == NULL)
+      //   {
+      //     jobsArray[0] = newJob;
+      //     newJob -> lastTimeScheduled = time;
+      //     newJob -> firstTimeScheduled = time;
+      //     newJob -> beenScheduled = 1;
+      //     return 0;
+      //   }
+      //   else
+      //   {
+      //     priqueue_offer(&queue, newJob);
+      //     newJob->lastPutinQueue = time;
+      //     return -1;
+      //   }
+      // }
+      //
+      // if(!preemptFlag)
+      // {
+      //   if(jobsArray[0] == NULL)
+      //   {
+      //     jobsArray[0] = newJob;
+      //     return 0;
+      //   }
+      //   else if(jobsArray[0] != NULL)
+      //   {
+      //     priqueue_offer(&queue, newJob);
+      //     return -1;
+      //   }
+      //
+      // }
+      // else // preemptive algorithm was selected, different conditions
+      // {
+      //   if (currentScheme == PPRI)
+      //   {
+      //     if(jobsArray[0] == NULL)
+      //     {
+      //       newJob-> lastTimeScheduled=time;
+      //       newJob-> firstTimeScheduled=time;
+      //       newJob-> beenScheduled=1;
+      //
+      //       jobsArray[0] = newJob;
+      //       return 0;
+      //
+      //     }
+      //     else if(jobsArray[0] != NULL)
+      //     {
+      //       if(newJob->priority < jobsArray[0] -> priority)
+      //       {
+      //         priqueue_offer(&queue, jobsArray[0]);
+      //         jobsArray[0] -> lastPutinQueue = time;
+      //         jobsArray[0] = newJob;
+      //
+      //         newJob-> lastTimeScheduled=time;
+      //         newJob-> firstTimeScheduled=time;
+      //
+      //         newJob-> beenScheduled=1;
+      //         return 0;
+      //       }
+      //       else
+      //       {
+      //         newJob-> lastPutinQueue = time;
+      //         priqueue_offer(&queue, newJob);
+      //         return -1;
+      //       }
+      //     }
+      //   }
+      //
+      //   else if(currentScheme == PSJF)
+      //   {
+      //     if(jobsArray[0] == NULL)
+      //     {
+      //       jobsArray[0] = newJob;
+      //       //  newJob-> waitTime += time-jobsArray[0]->arrivalTime;
+      //         newJob-> lastTimeScheduled = time;
+      //         newJob-> firstTimeScheduled= time;
+      //         newJob-> beenScheduled=1;
+      //
+      //       //  jobsArray[0]->waitTime += time-jobsArray[0]->lastTimeScheduled;
+      //
+      //       return 0;
+      //     }
+      //     else if(jobsArray[0] != NULL)
+      //     {
+      //       if(newJob->runTime < jobsArray[0]->runTime)
+      //       {
+      //         priqueue_offer(&queue, jobsArray[0]);
+      //         jobsArray[0] -> lastPutinQueue = time;
+      //         jobsArray[0] = newJob;
+      //       //  newJob-> waitTime += time - jobsArray[0]->arrivalTime;
+      //         newJob-> lastTimeScheduled = time;
+      //         newJob-> firstTimeScheduled= time;
+      //         newJob-> beenScheduled=1;
+      //
+      //           //jobsArray[0] -> waitTime+= time-jobsArray[0]->lastTimeScheduled;
+      //         return 0;
+      //       }
+      //       else
+      //       {
+      //         newJob->lastPutinQueue = time;
+      //         priqueue_offer(&queue, newJob);
+      //         return -1;
+      //       }
+      //     }
+      //   }
+      // }
 
 
 
@@ -306,80 +372,123 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
         numJobsFinished++;
+        job_t* lastJob = jobsArray[core_id];
 
-        if( !preemptFlag)
+        if(!preemptFlag)
         {
           if(priqueue_empty(&queue))
           {
-
-            job_t* lastJob = jobsArray[0];
+            jobsArray[core_id]=NULL;
             totalTurnAroundTime += time - lastJob->arrivalTime;
-
-            free(lastJob);
-            jobsArray[0] = NULL;
-            return -1;
-          }
-          else
-          {
-            job_t* lastJob = jobsArray[0];
-            totalTurnAroundTime += time - lastJob->arrivalTime;
-            free(lastJob);
-
-            job_t* nextJob = (job_t*)priqueue_poll(&queue);
-
-            jobsArray[0] = nextJob;
-
-            totalWaitTime+= time - nextJob->arrivalTime;
-            totalResponseTime+= time - nextJob->arrivalTime;
-
-            return nextJob->jobid;
-          }
-
-        }
-        else//preemption case
-        {
-          if(priqueue_empty(&queue))//queue is empty, free jobsarray[0]
-          {
-            job_t* lastJob = jobsArray[0];
-          //  lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
-            //totalResponseTime+=lastJob->responseTime;
-            //totalWaitTime += lastJob->waitTime;
-            totalWaitTime += lastJob->waitTime;
-
             totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
-
-            totalTurnAroundTime += time - lastJob->arrivalTime;
-
+            totalWaitTime+= lastJob->waitTime;
             free(lastJob);
-            jobsArray[0] = NULL;
             return -1;
           }
           else
           {
-            job_t* lastJob = jobsArray[0];
+            job_t* nextJob = priqueue_poll(&queue);
+            jobsArray[core_id] = nextJob;
+            nextJob->lastTimeScheduled = time;
+            nextJob->waitTime += time - nextJob->lastPutinQueue;
 
 
-            totalResponseTime+= lastJob ->firstTimeScheduled - lastJob->arrivalTime;
-            totalTurnAroundTime += time - lastJob->arrivalTime;
-            totalWaitTime += lastJob->waitTime;
-
-            free(lastJob);
-
-            job_t* nextJob = (job_t*)priqueue_poll(&queue);
-            nextJob -> waitTime += time - nextJob->lastPutinQueue;
-
-            jobsArray[0] = nextJob;
-
-            jobsArray[0]->lastTimeScheduled = time;
             if(!nextJob->beenScheduled)
             {
               nextJob->firstTimeScheduled = time;
-              nextJob->beenScheduled = 1;
+              nextJob-> beenScheduled = 1;
             }
 
-            return nextJob->jobid;
+
+            totalTurnAroundTime += time - lastJob->arrivalTime;
+            totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
+            totalWaitTime+= lastJob->waitTime;
+
+            free(lastJob);
+            return jobsArray[core_id]->jobid;
           }
         }
+        else
+        {
+          return -1;
+        }
+
+
+
+
+        // if( !preemptFlag)
+        // {
+        //   if(priqueue_empty(&queue))
+        //   {
+        //
+        //     job_t* lastJob = jobsArray[0];
+        //     totalTurnAroundTime += time - lastJob->arrivalTime;
+        //
+        //     free(lastJob);
+        //     jobsArray[0] = NULL;
+        //     return -1;
+        //   }
+        //   else
+        //   {
+        //     job_t* lastJob = jobsArray[0];
+        //     totalTurnAroundTime += time - lastJob->arrivalTime;
+        //     free(lastJob);
+        //
+        //     job_t* nextJob = (job_t*)priqueue_poll(&queue);
+        //
+        //     jobsArray[0] = nextJob;
+        //
+        //     totalWaitTime+= time - nextJob->arrivalTime;
+        //     totalResponseTime+= time - nextJob->arrivalTime;
+        //
+        //     return nextJob->jobid;
+        //   }
+        //
+        // }
+        // else//preemption case
+        // {
+        //   if(priqueue_empty(&queue))//queue is empty, free jobsarray[0]
+        //   {
+        //     job_t* lastJob = jobsArray[0];
+        //   //  lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
+        //     //totalResponseTime+=lastJob->responseTime;
+        //     //totalWaitTime += lastJob->waitTime;
+        //     totalWaitTime += lastJob->waitTime;
+        //
+        //     totalResponseTime += lastJob->firstTimeScheduled - lastJob->arrivalTime;
+        //
+        //     totalTurnAroundTime += time - lastJob->arrivalTime;
+        //
+        //     free(lastJob);
+        //     jobsArray[0] = NULL;
+        //     return -1;
+        //   }
+        //   else
+        //   {
+        //     job_t* lastJob = jobsArray[0];
+        //
+        //
+        //     totalResponseTime+= lastJob ->firstTimeScheduled - lastJob->arrivalTime;
+        //     totalTurnAroundTime += time - lastJob->arrivalTime;
+        //     totalWaitTime += lastJob->waitTime;
+        //
+        //     free(lastJob);
+        //
+        //     job_t* nextJob = (job_t*)priqueue_poll(&queue);
+        //     nextJob -> waitTime += time - nextJob->lastPutinQueue;
+        //
+        //     jobsArray[0] = nextJob;
+        //
+        //     jobsArray[0]->lastTimeScheduled = time;
+        //     if(!nextJob->beenScheduled)
+        //     {
+        //       nextJob->firstTimeScheduled = time;
+        //       nextJob->beenScheduled = 1;
+        //     }
+        //
+        //     return nextJob->jobid;
+        //   }
+        // }
 }
 
 
