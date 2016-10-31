@@ -57,6 +57,8 @@ int   priorityCompare(const void* a, const void* b)
 
 int   roundrobinCompare(const void* a, const void* b)
 {
+  (void*)a;
+  (void*)b;
   return -1;
 }
 
@@ -115,17 +117,12 @@ int preemptNeeded(job_t** array, job_t* newJob, scheme_t scheme)
   if(scheme == PPRI)
   {
     int newPri = newJob->priority;
-    int minPri = array[0]->priority;
-    for(int i = 0; i< numCores; i++)
+    for(int i=0; i<numCores; i++)
     {
-      if(array[i] -> priority < minPri)
+      if(newPri < array[i]->priority)
       {
-        minPri = array[i]->priority;
+        return 1;
       }
-    }
-    if(newPri < minPri)
-    {
-      return 1;
     }
     return 0;
   }
@@ -135,10 +132,18 @@ int preemptNeeded(job_t** array, job_t* newJob, scheme_t scheme)
   }
 }
 
-int coreToPreempt(job_t** array, scheme_t scheme)
+int coreToPreempt(job_t** array, job_t* newJob, scheme_t scheme)
 {
   if(scheme == PPRI)
   {
+
+    // for(int i=0; i< numCores; i++)
+    // {
+    //   if(newJob->priority < array[i]->priority)
+    //   {
+    //     return i;
+    //   }
+    // }
     int maxPri = array[0]->priority;
     for(int i=0; i<numCores; i++)
     {
@@ -250,11 +255,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       newJob-> waitTime = 0;
       newJob-> lastPutinQueue=0;
 
-      //update runtime
-      // if(jobsArray[0] != NULL)
-      // {
-      //   jobsArray[0] -> runTime -= time - jobsArray[0]->lastTimeScheduled;
-      // }
+
       for(int i = 0; i< numCores; i++)
       {
         if(jobsArray[i] != NULL)
@@ -286,6 +287,9 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         if(coresAvailable(jobsArray, numCores))
         {
           int nextCore = nextAvailableCore(jobsArray, numCores);
+          newJob->firstTimeScheduled = time;
+          newJob->lastTimeScheduled = time;
+          newJob->beenScheduled = 1;
           schedule(jobsArray, newJob, nextCore);
           return nextCore;
         }
@@ -293,14 +297,19 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         {
           if(preemptNeeded(jobsArray, newJob, currentScheme))
           {
-            int nextCore = coreToPreempt(jobsArray, currentScheme);
+            int nextCore = coreToPreempt(jobsArray,newJob, currentScheme);
             priqueue_offer(&queue, jobsArray[nextCore]);
+            jobsArray[nextCore]->lastPutinQueue = time;
             schedule(jobsArray, newJob, nextCore);
+            newJob->firstTimeScheduled = time;
+            newJob->lastTimeScheduled = time;
+            newJob->beenScheduled = 1;
             return nextCore;
           }
           else
           {
             priqueue_offer(&queue, newJob);
+            newJob->lastPutinQueue = time;
             return -1;
           }
         }
@@ -684,14 +693,7 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
-  if(jobsArray[0] != NULL)
-  {
-    printf("Currently Running: %d\n         ", jobsArray[0] -> jobid);
-  }
-  else
-  {
-    printf("NO JOB CURRENTLY RUNNING");
-  }
+
   if(priqueue_not_empty(&queue))
   {
     for(int i = 0; i< priqueue_size(&queue); i++)
