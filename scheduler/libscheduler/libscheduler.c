@@ -358,7 +358,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           {
             job_t* lastJob = jobsArray[0];
 
-            //lastJob->responseTime = lastJob->firstTimeScheduled - lastJob->arrivalTime;
+
             totalResponseTime+= lastJob ->firstTimeScheduled - lastJob->arrivalTime;
             totalTurnAroundTime += time - lastJob->arrivalTime;
             totalWaitTime += lastJob->waitTime;
