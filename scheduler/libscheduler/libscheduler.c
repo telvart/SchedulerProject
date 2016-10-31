@@ -129,6 +129,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
       break;
     case RR:
       priqueue_init(&queue, roundrobinCompare);
+      preemptFlag=1;
       break;
 
   }
@@ -177,6 +178,9 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         if (jobsArray[0] == NULL)
         {
           jobsArray[0] = newJob;
+          newJob -> lastTimeScheduled = time;
+          newJob -> firstTimeScheduled = time;
+          newJob -> beenScheduled = 1;
           return 0;
         }
         else
@@ -409,6 +413,12 @@ int scheduler_quantum_expired(int core_id, int time)
     priqueue_offer(&queue, jobsArray[0]);
     jobsArray[0]->lastPutinQueue = time;
     jobsArray[0]=priqueue_poll(&queue);
+    jobsArray[0] -> waitTime += time - jobsArray[0]->lastPutinQueue;
+    if(!jobsArray[0]->beenScheduled)
+    {
+      jobsArray[0] ->firstTimeScheduled= time;
+      jobsArray[0] -> beenScheduled = 1;
+    }
     return jobsArray[0]->jobid;
   }
 }
