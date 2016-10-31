@@ -144,6 +144,25 @@ int coreToPreempt(job_t** array, job_t* newJob, scheme_t scheme)
 {
   if(scheme == PPRI)
   {
+    int oldestJob = array[0]->lastTimeScheduled;
+    for(int i =0; i<numCores; i++)
+    {
+      if (array[i]->lastTimeScheduled < oldestJob)
+      {
+        oldestJob = array[i]->lastTimeScheduled;
+      }
+    }
+    for(int i =0; i<numCores; i++)
+    {
+      if((array[i]->lastTimeScheduled == oldestJob) )//&& (array[i]->priority > newJob->priority))
+      {
+        return i;
+      }
+    }
+
+
+
+    /*
     int maxPri = array[0]->priority;
     for(int i=0; i<numCores; i++)
     {
@@ -158,7 +177,7 @@ int coreToPreempt(job_t** array, job_t* newJob, scheme_t scheme)
       {
         return i;
       }
-    }
+    }*/
   }
   else
   {
