@@ -171,6 +171,7 @@ int coreToPreempt(job_t** array, job_t* newJob, scheme_t scheme)
     }
 
   }
+  return -1;
 
 }
 
@@ -310,7 +311,15 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             newJob->beenScheduled = 1;
 
             int nextCore = coreToPreempt(jobsArray,newJob, currentScheme);
+
+            if(jobsArray[nextCore]->firstTimeScheduled == time)
+            {
+              jobsArray[nextCore]->firstTimeScheduled = -1;
+              jobsArray[nextCore]->beenScheduled = 0;
+            }
+
             priqueue_offer(&queue, jobsArray[nextCore]);
+
             jobsArray[nextCore]->lastPutinQueue = time;
             schedule(jobsArray, newJob, nextCore);
 
