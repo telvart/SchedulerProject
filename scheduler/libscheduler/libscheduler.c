@@ -140,64 +140,152 @@ int preemptNeeded(job_t** array, job_t* newJob, scheme_t scheme)
   }
 }
 
+int duplicates(job_t** array, job_t* newJob, scheme_t scheme)
+{
+  for(int i=0; i<numCores; i++)
+  {
+    for(int j=0; j<numCores; j++)
+    {
+      if(array[i]->priority == array[j]->priority)
+      {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+
 int coreToPreempt(job_t** array, job_t* newJob, scheme_t scheme)
 {
+
   if(scheme == PPRI)
   {
-    int oldestJob = array[0]->lastTimeScheduled;
-    for(int i =0; i<numCores; i++)
-    {
-      if (array[i]->lastTimeScheduled < oldestJob)
+      int maxPri = array[0]->priority;
+      int valIndex = 0;
+      for(int i=0; i<numCores; i++)
       {
-        oldestJob = array[i]->lastTimeScheduled;
-      }
-    }
-    for(int i =0; i<numCores; i++)
-    {
-      if((array[i]->lastTimeScheduled == oldestJob) )//&& (array[i]->priority > newJob->priority))
-      {
-        return i;
-      }
-    }
+        if(array[i]->priority > maxPri)
+        {
+          maxPri = array[i]->priority;
+          valIndex = i;
 
-
-
-    /*
-    int maxPri = array[0]->priority;
-    for(int i=0; i<numCores; i++)
-    {
-      if(array[i] -> priority > maxPri)
-      {
-        maxPri = array[i]->priority;
+        }
       }
-    }
-    for(int i =0; i<numCores; i++)
-    {
-      if(array[i]->priority == maxPri)
+
+      int newestJob = array[valIndex]->lastTimeScheduled;
+      for(int i=0; i<numCores; i++)
       {
-        return i;
+        if(array[i]->priority == maxPri)
+        {
+          if(array[i]->lastTimeScheduled > newestJob)
+          {
+            newestJob == array[i]->lastTimeScheduled;
+          }
+        }
       }
-    }*/
+      for(int i=0; i<numCores; i++)
+      {
+        if(array[i]->priority == maxPri)
+        {
+          if(array[i]->lastTimeScheduled == newestJob)
+          {
+            return i;
+          }
+
+        }
+      }
   }
   else
   {
-    int maxRunTime = array[0]->runTime;
-    for(int i=0; i<numCores; i++)
-    {
-      if(array[i] ->runTime > maxRunTime)
-      {
-        maxRunTime = array[i]->runTime;
-      }
-    }
-    for(int i=0; i<numCores; i++)
-    {
-      if(array[i]->runTime == maxRunTime)
-      {
-        return i;
-      }
-
-    }
+    return -1;
   }
+
+
+//   if(scheme == PPRI)
+//   {
+//
+//   int maxPri = array[0]->priority;
+//   for(int i=0; i<numCores; i++)
+//   {
+//     if(array[i]->priority > maxPri)
+//     {
+//       maxPri = array[i]->priority;
+//     }
+//   }
+//   for(int i=0; i<numCores; i++)
+//   {
+//     if(array[i]->priority == maxPri)
+//     {
+//       return i;
+//     }
+//   }
+//
+//
+//
+//
+//     return -1;
+// /*
+//
+//     int minPri = array[0]->priority;
+//     for(int i=0; i<numCores; i++)
+//     {
+//       if(array[i]->priority > minPri)
+//       {
+//         minPri = array[i]->priority;
+//       }
+//     }
+//
+//     int newestJob = array[0]->arrivalTime;
+//     for(int i=0; i<numCores; i++)
+//     {
+//       if(array[i]->arrivalTime > newestJob)
+//       {
+//         if(array[i]->priority = minPri)
+//         {
+//           newestJob = array[i]->arrivalTime;
+//         }
+//       }
+//     }
+//     for(int i=0; i<numCores; i++)
+//     {
+//       if(array[i]->priority == minPri)
+//       {
+//         if(array[i]->arrivalTime = newestJob)
+//         {
+//           return i;
+//         }
+//       }
+//     }
+// */
+//
+//   }
+//   else
+//   {
+//     int maxRunTime = array[0]->runTime;
+//     for(int i=0; i<numCores; i++)
+//     {
+//       if(array[i] ->runTime > maxRunTime)
+//       {
+//         maxRunTime = array[i]->runTime;
+//       }
+//     }
+//     for(int i=0; i<numCores; i++)
+//     {
+//       if(array[i] ->runTime > maxRunTime)
+//       {
+//         maxRunTime = array[i]->runTime;
+//       }
+//     }
+//     for(int i=0; i<numCores; i++)
+//     {
+//       if(array[i]->runTime == maxRunTime)
+//       {
+//         return i;
+//       }
+//
+//     }
+//   }
 }
 
 
@@ -331,13 +419,15 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         {
           if(preemptNeeded(jobsArray, newJob, currentScheme))
           {
+            newJob->lastTimeScheduled = time;
+            newJob->firstTimeScheduled = time;
+            newJob->beenScheduled = 1;
+
             int nextCore = coreToPreempt(jobsArray,newJob, currentScheme);
             priqueue_offer(&queue, jobsArray[nextCore]);
             jobsArray[nextCore]->lastPutinQueue = time;
             schedule(jobsArray, newJob, nextCore);
-            newJob->firstTimeScheduled = time;
-            newJob->lastTimeScheduled = time;
-            newJob->beenScheduled = 1;
+
             return nextCore;
           }
           else
